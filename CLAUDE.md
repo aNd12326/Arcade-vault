@@ -15,6 +15,9 @@ npx tsc --noEmit # type-check
 npx next typegen # generate PageProps/LayoutProps/RouteContext helpers
 ```
 
+## Skills
+Usa siempre /frontend-design para diseñar la interfaz de usuario.
+
 ## Stack
 
 - **Next.js 16.2.7** — App Router only; Pages Router unused
