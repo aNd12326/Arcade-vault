@@ -12,7 +12,7 @@ export default function Nav() {
   const [open, setOpen] = useState(false);
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/" || pathname.startsWith("/games");
+    if (href === "/games") return pathname.startsWith("/games");
     return pathname === href;
   };
 
@@ -33,10 +33,13 @@ export default function Nav() {
 
         <div className="links">
           <Link href="/" className={isActive("/") ? "active" : ""}>
-            Biblioteca
+            INICIO
+          </Link>
+          <Link href="/games" className={isActive("/games") ? "active" : ""}>
+            GAMES
           </Link>
           <Link href="/hall-of-fame" className={isActive("/hall-of-fame") ? "active" : ""}>
-            Salón de la Fama
+            SALÓN
           </Link>
         </div>
 
@@ -75,10 +78,13 @@ export default function Nav() {
           MENÚ
         </div>
         <Link href="/" className={isActive("/") ? "active" : ""} onClick={() => setOpen(false)}>
-          Biblioteca
+          INICIO
+        </Link>
+        <Link href="/games" className={isActive("/games") ? "active" : ""} onClick={() => setOpen(false)}>
+          GAMES
         </Link>
         <Link href="/hall-of-fame" className={isActive("/hall-of-fame") ? "active" : ""} onClick={() => setOpen(false)}>
-          Salón de la Fama
+          SALÓN
         </Link>
         <Link href="/auth" className={isActive("/auth") ? "active" : ""} onClick={() => setOpen(false)}>
           {user ? "Cuenta" : "Iniciar Sesión"}
