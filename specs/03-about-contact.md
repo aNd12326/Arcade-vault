@@ -1,6 +1,6 @@
 # SPEC 03 — About Page + Envío de Correo
 
-> **Status:** Approved · **Depende de:** 02-home-landing · **Fecha:** 2026-06-06
+> **Status:** Implemented · **Depende de:** 02-home-landing · **Fecha:** 2026-06-06
 > **Objetivo:** Implementar la página `/about` con sección "Acerca de" y formulario de contacto
 > que envía correos reales vía Resend a `andersonventosilla0@gmail.com`.
 
