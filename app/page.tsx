@@ -19,16 +19,16 @@ export default function LibraryPage() {
       <section className="av-hero">
         <h1 className="pixel flicker">ARCADE VAULT</h1>
         <p className="sub">
-          INSERT COIN &mdash; <span className="blink">▮</span> SELECT GAME
+          INSERTA UNA MONEDA PARA JUGAR <span className="blink">_</span>
         </p>
       </section>
 
       <div className="av-filters">
         <div className="av-search">
-          <span className="ico">▶</span>
+          <span className="ico">⌕</span>
           <input
             type="text"
-            placeholder="BUSCAR JUEGO..."
+            placeholder="Buscar un juego por nombre…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -48,19 +48,10 @@ export default function LibraryPage() {
 
       <div className="av-grid">
         {filtered.length === 0 ? (
-          <p
-            style={{
-              fontFamily: "var(--pixel)",
-              fontSize: 11,
-              color: "var(--ink-faint)",
-              letterSpacing: "0.14em",
-              gridColumn: "1/-1",
-              textAlign: "center",
-              padding: "48px 0",
-            }}
-          >
-            NO RESULTS FOUND
-          </p>
+          <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: 80, color: "var(--ink-faint)" }}>
+            <div className="pixel" style={{ fontSize: 14, color: "var(--magenta)", marginBottom: 12 }}>NO HAY RESULTADOS</div>
+            <div>Intenta otra búsqueda o categoría.</div>
+          </div>
         ) : (
           filtered.map((g) => <GameCard key={g.id} game={g} />)
         )}
@@ -114,22 +105,17 @@ function GameCard({ game }: { game: Game }) {
         <div className="desc">{game.short}</div>
         <div className="row">
           <div className="score-badge">
-            <span>MEJOR</span>
-            <b>{game.best.toLocaleString()}</b>
-          </div>
-          <div className="score-badge" style={{ textAlign: "right" }}>
-            <span>PARTIDAS</span>
-            <b style={{ color: accent }}>{game.plays}</b>
+            <span>MEJOR PUNTUACIÓN</span>
+            <b>{game.best.toLocaleString("es-ES")}</b>
           </div>
           <button
-            className="btn"
-            style={{ borderColor: accent, fontSize: 9, padding: "8px 14px" }}
+            className={`btn${game.color === "magenta" ? " magenta" : game.color === "yellow" ? " yellow" : ""}`}
             onClick={(e) => {
               e.stopPropagation();
               router.push(`/games/${game.id}`);
             }}
           >
-            VER
+            JUGAR
           </button>
         </div>
       </div>

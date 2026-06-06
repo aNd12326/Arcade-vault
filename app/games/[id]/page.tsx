@@ -11,7 +11,7 @@ export default async function GameDetailPage({
   const game = GAMES.find((g) => g.id === id);
   if (!game) notFound();
 
-  const scores = seededScores(game.id.charCodeAt(0) * 31 + game.id.length, 10);
+  const scores = seededScores(game.id.length * 17 + 3, 10);
 
   return <GameDetailClient game={game} scores={scores} />;
 }
