@@ -1,6 +1,6 @@
 # SPEC 04 — Integración Supabase
 
-> **Status:** Aprovado · **Depende de:** 03-about-contact · **Fecha:** 2026-06-06
+> **Status:** Implementado · **Depende de:** 03-about-contact · **Fecha:** 2026-06-06
 > **Objetivo:** Instalar y configurar el cliente Supabase (server + browser) como
 > infraestructura base para specs futuros de auth, DB, real-time y Edge Functions.
 
