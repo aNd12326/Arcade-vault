@@ -1,123 +1,162 @@
 "use client";
 
-import { useState, useRef, MouseEvent } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { GAMES, CATS, type Game } from "./_lib/data";
+import { GAMES } from "./_lib/data";
 
-export default function LibraryPage() {
-  const [query, setQuery] = useState("");
-  const [cat, setCat] = useState("TODOS");
+// ── Internal hooks ────────────────────────────────────────────────────────────
 
-  const filtered = GAMES.filter((g) => {
-    const matchCat = cat === "TODOS" || g.cat === cat;
-    const matchQ = g.title.toLowerCase().includes(query.toLowerCase());
-    return matchCat && matchQ;
-  });
+function useReveal() {
+  useEffect(() => {
+    const els = document.querySelectorAll<Element>(".reveal");
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("in");
+            io.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+}
 
+// ── Internal components ───────────────────────────────────────────────────────
+
+function FloatingSilhouettes() {
   return (
-    <>
-      <section className="av-hero">
-        <h1 className="pixel flicker">ARCADE VAULT</h1>
-        <p className="sub">
-          INSERTA UNA MONEDA PARA JUGAR <span className="blink">_</span>
-        </p>
-      </section>
-
-      <div className="av-filters">
-        <div className="av-search">
-          <span className="ico">⌕</span>
-          <input
-            type="text"
-            placeholder="Buscar un juego por nombre…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
-        <div className="av-chips">
-          {CATS.map((c) => (
-            <button
-              key={c}
-              className={`chip${cat === c ? " active" : ""}`}
-              onClick={() => setCat(c)}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="av-grid">
-        {filtered.length === 0 ? (
-          <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: 80, color: "var(--ink-faint)" }}>
-            <div className="pixel" style={{ fontSize: 14, color: "var(--magenta)", marginBottom: 12 }}>NO HAY RESULTADOS</div>
-            <div>Intenta otra búsqueda o categoría.</div>
-          </div>
-        ) : (
-          filtered.map((g) => <GameCard key={g.id} game={g} />)
-        )}
-      </div>
-    </>
+    <div className="home-silos" aria-hidden="true">
+      <svg className="silo s1" viewBox="0 0 40 32"><g fill="#00f5ff">
+        <rect x="6" y="4" width="4" height="4"/><rect x="30" y="4" width="4" height="4"/>
+        <rect x="2" y="8" width="36" height="4"/>
+        <rect x="2" y="12" width="4" height="4"/><rect x="14" y="12" width="4" height="4"/><rect x="22" y="12" width="4" height="4"/><rect x="34" y="12" width="4" height="4"/>
+        <rect x="2" y="16" width="36" height="4"/>
+        <rect x="6" y="20" width="4" height="4"/><rect x="30" y="20" width="4" height="4"/>
+      </g></svg>
+      <svg className="silo s2" viewBox="0 0 32 32"><g fill="#ff006e">
+        <rect x="8" y="0" width="16" height="4"/>
+        <rect x="4" y="4" width="24" height="4"/>
+        <rect x="0" y="8" width="32" height="12"/>
+        <rect x="0" y="20" width="6" height="6"/><rect x="10" y="20" width="4" height="6"/><rect x="18" y="20" width="4" height="6"/><rect x="26" y="20" width="6" height="6"/>
+      </g></svg>
+      <svg className="silo s3" viewBox="0 0 32 32"><g fill="#f5ff00">
+        <rect x="10" y="0" width="12" height="4"/>
+        <rect x="6" y="4" width="20" height="4"/>
+        <rect x="4" y="8" width="6" height="6"/><rect x="22" y="8" width="6" height="6"/>
+        <rect x="2" y="14" width="28" height="10"/>
+        <rect x="6" y="24" width="4" height="4"/><rect x="14" y="24" width="4" height="4"/><rect x="22" y="24" width="4" height="4"/>
+      </g></svg>
+      <svg className="silo s4" viewBox="0 0 24 24"><g fill="#00ff88">
+        <rect x="10" y="0" width="4" height="24"/>
+        <rect x="0" y="10" width="24" height="4"/>
+        <rect x="6" y="6" width="12" height="12" fill="none" stroke="#00ff88" strokeWidth="2"/>
+      </g></svg>
+      <svg className="silo s5" viewBox="0 0 36 24"><g fill="#aa00ff">
+        <rect x="14" y="2" width="8" height="4"/>
+        <rect x="10" y="6" width="16" height="4"/>
+        <rect x="4" y="10" width="28" height="4"/>
+        <rect x="0" y="14" width="36" height="4"/>
+        <rect x="6" y="18" width="4" height="2"/><rect x="16" y="18" width="4" height="2"/><rect x="26" y="18" width="4" height="2"/>
+      </g></svg>
+      <svg className="silo s6" viewBox="0 0 20 20"><g fill="#ffcf3a">
+        <rect x="6" y="0" width="8" height="2"/>
+        <rect x="2" y="2" width="16" height="2"/>
+        <rect x="0" y="4" width="20" height="12"/>
+        <rect x="2" y="16" width="16" height="2"/>
+        <rect x="6" y="18" width="8" height="2"/>
+        <rect x="8" y="4" width="4" height="12" fill="#0a0a0f"/>
+      </g></svg>
+      <svg className="silo s7" viewBox="0 0 24 22"><g fill="#ff3060">
+        <rect x="2" y="2" width="6" height="2"/><rect x="16" y="2" width="6" height="2"/>
+        <rect x="0" y="4" width="10" height="4"/><rect x="14" y="4" width="10" height="4"/>
+        <rect x="0" y="8" width="24" height="4"/>
+        <rect x="2" y="12" width="20" height="2"/>
+        <rect x="4" y="14" width="16" height="2"/>
+        <rect x="6" y="16" width="12" height="2"/>
+        <rect x="8" y="18" width="8" height="2"/>
+        <rect x="10" y="20" width="4" height="2"/>
+      </g></svg>
+      <svg className="silo s8" viewBox="0 0 24 24"><g fill="#00d4ff">
+        <rect x="8" y="2" width="8" height="6"/>
+        <rect x="2" y="8" width="20" height="8"/>
+        <rect x="8" y="16" width="8" height="6"/>
+        <rect x="11" y="6" width="2" height="2" fill="#0a0a0f"/>
+        <rect x="11" y="16" width="2" height="2" fill="#0a0a0f"/>
+        <rect x="4" y="11" width="2" height="2" fill="#0a0a0f"/>
+        <rect x="18" y="11" width="2" height="2" fill="#0a0a0f"/>
+      </g></svg>
+    </div>
   );
 }
 
-function GameCard({ game }: { game: Game }) {
+function MiniCard({ game, onClick }: { game: (typeof GAMES)[0]; onClick: () => void }) {
+  return (
+    <div className="mini-card" onClick={onClick}>
+      <div className="mini-cover">
+        <div className={`cover-bg ${game.cover}`} />
+      </div>
+      <div className="mini-meta">
+        <div className="mini-title">{game.title}</div>
+        <div className="mini-cat">{game.cat}</div>
+      </div>
+    </div>
+  );
+}
+
+function FeatureIcon({ kind }: { kind: "GAMEPAD" | "FREE" | "TROPHY" | "ROCKET" }) {
+  const C = "currentColor";
+  if (kind === "GAMEPAD") return (
+    <svg className="ft-icon" viewBox="0 0 16 16"><g fill={C}>
+      <rect x="2" y="6" width="12" height="6"/>
+      <rect x="0" y="8" width="2" height="4"/><rect x="14" y="8" width="2" height="4"/>
+      <rect x="3" y="8" width="2" height="2"/><rect x="2" y="9" width="4" height="0.5"/>
+      <rect x="11" y="7" width="1.5" height="1.5"/><rect x="11" y="10" width="1.5" height="1.5"/>
+    </g></svg>
+  );
+  if (kind === "FREE") return (
+    <svg className="ft-icon" viewBox="0 0 16 16"><g fill={C}>
+      <rect x="3" y="3" width="10" height="10" fill="none" stroke={C} strokeWidth="1.5"/>
+      <rect x="5" y="6" width="1.5" height="4"/><rect x="5" y="6" width="4" height="1.5"/><rect x="5" y="8" width="3" height="1"/>
+      <rect x="10" y="6" width="1.5" height="4"/>
+    </g></svg>
+  );
+  if (kind === "TROPHY") return (
+    <svg className="ft-icon" viewBox="0 0 16 16"><g fill={C}>
+      <rect x="3" y="2" width="10" height="2"/>
+      <rect x="3" y="2" width="2" height="6"/><rect x="11" y="2" width="2" height="6"/>
+      <rect x="5" y="8" width="6" height="2"/>
+      <rect x="7" y="10" width="2" height="3"/>
+      <rect x="5" y="13" width="6" height="1.5"/>
+      <rect x="1" y="3" width="2" height="3"/><rect x="13" y="3" width="2" height="3"/>
+    </g></svg>
+  );
+  if (kind === "ROCKET") return (
+    <svg className="ft-icon" viewBox="0 0 16 16"><g fill={C}>
+      <rect x="7" y="1" width="2" height="2"/>
+      <rect x="6" y="3" width="4" height="2"/>
+      <rect x="5" y="5" width="6" height="6"/>
+      <rect x="4" y="11" width="2" height="2"/><rect x="10" y="11" width="2" height="2"/>
+      <rect x="7" y="6" width="2" height="2" fill="#0a0a0f"/>
+      <rect x="6" y="13" width="1" height="2"/><rect x="9" y="13" width="1" height="2"/>
+    </g></svg>
+  );
+  return null;
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+export default function HomePage() {
   const router = useRouter();
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
-    const el = cardRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    el.style.transform = `perspective(600px) rotateY(${x * 12}deg) rotateX(${-y * 10}deg) translateY(-6px)`;
-  };
-
-  const handleMouseLeave = () => {
-    const el = cardRef.current;
-    if (!el) return;
-    el.style.transform = "";
-  };
-
-  const colorMap: Record<string, string> = {
-    cyan: "var(--cyan)",
-    magenta: "var(--magenta)",
-    yellow: "var(--yellow)",
-    green: "var(--green)",
-  };
-  const accent = colorMap[game.color] ?? "var(--cyan)";
+  useReveal();
 
   return (
-    <div
-      ref={cardRef}
-      className="card fade-in"
-      onClick={() => router.push(`/games/${game.id}`)}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ "--accent": accent } as React.CSSProperties}
-    >
-      <div className="cover">
-        <div className={`cover-bg ${game.cover}`} />
-        <span className="label">{game.cat}</span>
-      </div>
-      <div className="meta">
-        <div className="title">{game.title}</div>
-        <div className="desc">{game.short}</div>
-        <div className="row">
-          <div className="score-badge">
-            <span>MEJOR PUNTUACIÓN</span>
-            <b>{game.best.toLocaleString("es-ES")}</b>
-          </div>
-          <button
-            className={`btn${game.color === "magenta" ? " magenta" : game.color === "yellow" ? " yellow" : ""}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/games/${game.id}`);
-            }}
-          >
-            JUGAR
-          </button>
-        </div>
+    <div className="home fade-in">
+      <div style={{ padding: "40px 32px", textAlign: "center", color: "var(--ink-dim)" }}>
+        WIP — full page coming in next step
       </div>
     </div>
   );
