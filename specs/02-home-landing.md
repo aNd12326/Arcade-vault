@@ -1,6 +1,6 @@
 # SPEC 02 — Home Page (Landing)
 
-> **Status:** Approved · **Depende de:** 01-mvp-visual · **Fecha:** 2026-06-06
+> **Status:** Implemented · **Depende de:** 01-mvp-visual · **Fecha:** 2026-06-06
 > **Objetivo:** Implementar la landing page en `/` con hero fullscreen, secciones de features/juegos/stats/actividad/precios y CTA final, moviendo la Biblioteca actual a `/games`, y actualizando el Nav para reflejar la nueva estructura de rutas.
 
 ---
