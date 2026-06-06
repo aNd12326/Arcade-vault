@@ -38,6 +38,9 @@ export default function Nav() {
           <Link href="/games" className={isActive("/games") ? "active" : ""}>
             GAMES
           </Link>
+          <Link href="/about" className={isActive("/about") ? "active" : ""}>
+            ABOUT
+          </Link>
           <Link href="/hall-of-fame" className={isActive("/hall-of-fame") ? "active" : ""}>
             SALÓN
           </Link>
@@ -82,6 +85,9 @@ export default function Nav() {
         </Link>
         <Link href="/games" className={isActive("/games") ? "active" : ""} onClick={() => setOpen(false)}>
           GAMES
+        </Link>
+        <Link href="/about" className={isActive("/about") ? "active" : ""} onClick={() => setOpen(false)}>
+          ABOUT
         </Link>
         <Link href="/hall-of-fame" className={isActive("/hall-of-fame") ? "active" : ""} onClick={() => setOpen(false)}>
           SALÓN
