@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/anderson/.nvm/versions/node/v24.16.0/bin/node /home/anderson/Documents/ClaudeCode/05-arcade-vault/.claude/hooks/fmt.js",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/anderson/.nvm/versions/node/v24.16.0/bin/node /home/anderson/Documents/ClaudeCode/05-arcade-vault/.claude/hooks/fmt.js",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
