@@ -30,14 +30,30 @@ interface GameGlobal {
   getSkins?: () => { key: string; label: string }[];
 }
 
+/**
+ * Map a KeyboardEvent.key to its physical KeyboardEvent.code.
+ * Some engines listen on `e.key` (Arkanoid, Snake), others on `e.code`
+ * (Asteroids, Tetris) — synthetic events must carry both.
+ */
+function keyToCode(key: string): string {
+  if (key === " ") return "Space";
+  if (/^[a-z]$/i.test(key)) return "Key" + key.toUpperCase();
+  if (key === "Shift") return "ShiftLeft";
+  return key; // Arrow* keys: key === code
+}
+
 /** Dispatch a synthetic keyboard event so each game's existing key listeners fire. */
 function press(key?: string) {
   if (!key) return;
-  document.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+  document.dispatchEvent(
+    new KeyboardEvent("keydown", { key, code: keyToCode(key), bubbles: true })
+  );
 }
 function release(key?: string) {
   if (!key) return;
-  document.dispatchEvent(new KeyboardEvent("keyup", { key, bubbles: true }));
+  document.dispatchEvent(
+    new KeyboardEvent("keyup", { key, code: keyToCode(key), bubbles: true })
+  );
 }
 
 const padBtn: React.CSSProperties = {

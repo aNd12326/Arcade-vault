@@ -10,20 +10,21 @@ import MobileGamepad, { type KeyMap } from "../../../_components/MobileGamepad";
 
 // Per-game synthetic-key mapping for the mobile virtual gamepad (SPEC 10).
 const KEY_MAPS: Record<string, KeyMap> = {
+  // B dropped: Asteroids engine has no hyperspace/z handler.
   asteroids: {
     up: "ArrowUp",
     left: "ArrowLeft",
     right: "ArrowRight",
     a: " ",
-    b: "z",
   },
+  // B = Space (hard drop); engine has no Shift handler.
   tetris: {
     up: "ArrowUp",
     down: "ArrowDown",
     left: "ArrowLeft",
     right: "ArrowRight",
     a: "ArrowUp",
-    b: "Shift",
+    b: " ",
   },
   arkanoid: { left: "ArrowLeft", right: "ArrowRight", a: " " },
   snake: { up: "w", down: "s", left: "a", right: "d" },
