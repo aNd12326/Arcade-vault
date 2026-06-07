@@ -17,7 +17,9 @@ export default function GamePlayerClient({ game }: { game: Game }) {
   const [paused, setPaused] = useState(false);
   const [over, setOver] = useState(false);
   const [name, setName] = useState((user?.name ?? "INVITADO").slice(0, 10));
-  const [saved, setSaved] = useState(false);
+  type SubmitState = "idle" | "submitting" | "submitted" | "error";
+  const [submitState, setSubmitState] = useState<SubmitState>("idle");
+  const [submitError, setSubmitError] = useState("");
 
   const canvasRef = useRef<GameCanvasRef>(null);
   const EngineCanvas = GAME_ENGINES[game.id];
@@ -57,7 +59,8 @@ export default function GamePlayerClient({ game }: { game: Game }) {
     setLevel(1);
     setPaused(false);
     setOver(false);
-    setSaved(false);
+    setSubmitState("idle");
+    setSubmitError("");
     canvasRef.current?.restart();
   };
 
@@ -171,27 +174,72 @@ export default function GamePlayerClient({ game }: { game: Game }) {
             <div className="final-label">PUNTUACIÓN FINAL</div>
             <div className="final">{score.toLocaleString("es-ES")}</div>
 
-            {!saved ? (
+            {submitState !== "submitted" ? (
               <div className="input-row">
                 <input
                   value={name}
+                  maxLength={20}
+                  disabled={submitState === "submitting"}
                   onChange={(e) =>
-                    setName(e.target.value.toUpperCase().slice(0, 10))
+                    setName(e.target.value.toUpperCase().slice(0, 20))
                   }
-                  placeholder="TUS INICIALES"
+                  placeholder="TU NICKNAME"
                 />
+                {submitState === "error" && (
+                  <div
+                    style={{
+                      color: "var(--magenta)",
+                      fontSize: 11,
+                      letterSpacing: "0.08em",
+                      marginTop: 4,
+                    }}
+                  >
+                    {submitError}
+                  </div>
+                )}
                 <button
                   className="btn yellow"
-                  onClick={() => {
-                    saveScore(game.id, score, name);
-                    setSaved(true);
+                  disabled={
+                    submitState === "submitting" || name.trim().length === 0
+                  }
+                  onClick={async () => {
+                    if (name.trim().length === 0 || name.trim().length > 20)
+                      return;
+                    setSubmitState("submitting");
+                    setSubmitError("");
+                    try {
+                      const res = await fetch("/api/scores", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          gameId: game.id,
+                          nickname: name.trim(),
+                          score,
+                        }),
+                      });
+                      if (!res.ok) {
+                        const data = await res.json().catch(() => ({}));
+                        setSubmitError(
+                          (data as { error?: string }).error ??
+                            "Error al publicar."
+                        );
+                        setSubmitState("error");
+                      } else {
+                        setSubmitState("submitted");
+                      }
+                    } catch {
+                      setSubmitError("Error de red. Intenta de nuevo.");
+                      setSubmitState("error");
+                    }
                   }}
                 >
-                  GUARDAR PUNTUACIÓN
+                  {submitState === "submitting"
+                    ? "PUBLICANDO…"
+                    : "PUBLICAR SCORE"}
                 </button>
               </div>
             ) : (
-              <div className="toast-saved">▸ PUNTUACIÓN GUARDADA_</div>
+              <div className="toast-saved">▸ PUNTUACIÓN PUBLICADA_</div>
             )}
 
             <div className="actions">
