@@ -6,6 +6,51 @@
   const COLS = 25;
   const ROWS = 25;
 
+  // ---- Visual skins ----
+  const SKINS = {
+    clasico: {
+      label: "Clásico",
+      style: "rounded",
+      boardBg: "#0f172a",
+      gridColor: "rgba(255,255,255,0.04)",
+      headColor: "#86efac",
+      bodyColor: "#4ade80",
+      fruitBg: "#facc15",
+    },
+    retro: {
+      label: "Retro",
+      style: "flat",
+      boardBg: "#1a1a25",
+      gridColor: "rgba(255,255,255,0.06)",
+      headColor: "#a3e635",
+      bodyColor: "#65a30d",
+      fruitBg: "#f97316",
+    },
+    neon: {
+      label: "Neón",
+      style: "neon",
+      boardBg: "#000000",
+      gridColor: "rgba(0,255,100,0.05)",
+      headColor: "#39ff14",
+      bodyColor: "#00cc44",
+      fruitBg: "#ff00cc",
+    },
+  };
+
+  const SKIN_KEY = "snake-skin";
+
+  function loadSkinName() {
+    try {
+      const saved = localStorage.getItem(SKIN_KEY);
+      return saved && SKINS[saved] ? saved : "clasico";
+    } catch (e) {
+      return "clasico";
+    }
+  }
+
+  let currentSkinName = loadSkinName();
+  let skin = SKINS[currentSkinName];
+
   const FRUIT_KEYS = Object.keys(window.SPRITE_ATLAS.fruits);
 
   const fruitsImg = new Image();
@@ -64,7 +109,7 @@
   }
 
   function emit(name, detail) {
-    canvas.dispatchEvent(new CustomEvent(name, { detail, bubbles: true }));
+    window.dispatchEvent(new CustomEvent(name, { detail }));
   }
 
   function eatFruit() {
@@ -129,11 +174,50 @@
     ctx.fill();
   }
 
+  function drawSegment(seg, isHead) {
+    const color = isHead ? skin.headColor : skin.bodyColor;
+    const pad = 2;
+    const px = seg.x * CELL + pad;
+    const py = seg.y * CELL + pad;
+    const s = CELL - pad * 2;
+
+    ctx.save();
+    switch (skin.style) {
+      case "neon": {
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = color;
+        ctx.fillStyle = color;
+        ctx.fillRect(px, py, s, s);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(px + 4, py + 4, s - 8, s - 8);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(px + 1, py + 1, s - 2, s - 2);
+        break;
+      }
+      case "flat": {
+        ctx.fillStyle = color;
+        ctx.fillRect(px, py, s, s);
+        // CRT highlight: 4px white strip at top
+        ctx.fillStyle = "rgba(255,255,255,0.18)";
+        ctx.fillRect(px, py, s, 4);
+        break;
+      }
+      default: {
+        // rounded (clasico)
+        drawRoundedRect(px, py, s, s, 4, color);
+        break;
+      }
+    }
+    ctx.restore();
+  }
+
   function draw() {
-    ctx.fillStyle = "#0f172a";
+    ctx.fillStyle = skin.boardBg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.strokeStyle = "rgba(255,255,255,0.04)";
+    ctx.strokeStyle = skin.gridColor;
     ctx.lineWidth = 0.5;
     for (let x = 0; x <= COLS; x++) {
       ctx.beginPath();
@@ -148,30 +232,30 @@
       ctx.stroke();
     }
 
-    const pad = 2;
     for (let i = snake.length - 1; i >= 0; i--) {
-      const seg = snake[i];
-      const isHead = i === 0;
-      const color = isHead ? "#86efac" : "#4ade80";
-      drawRoundedRect(
-        seg.x * CELL + pad,
-        seg.y * CELL + pad,
-        CELL - pad * 2,
-        CELL - pad * 2,
-        4,
-        color
-      );
+      drawSegment(snake[i], i === 0);
     }
 
     const fx = fruit.x * CELL + CELL / 2;
     const fy = fruit.y * CELL + CELL / 2;
     const fr = CELL / 2 - 2;
 
-    // solid yellow circle — always visible regardless of sprite
-    ctx.fillStyle = "#facc15";
-    ctx.beginPath();
-    ctx.arc(fx, fy, fr, 0, Math.PI * 2);
-    ctx.fill();
+    // solid circle fallback — always visible regardless of sprite
+    if (skin.style === "neon") {
+      ctx.save();
+      ctx.shadowBlur = 16;
+      ctx.shadowColor = skin.fruitBg;
+      ctx.fillStyle = skin.fruitBg;
+      ctx.beginPath();
+      ctx.arc(fx, fy, fr, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else {
+      ctx.fillStyle = skin.fruitBg;
+      ctx.beginPath();
+      ctx.arc(fx, fy, fr, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     if (imgReady) {
       const sp = window.SPRITE_ATLAS?.fruits?.[fruit.sprite];
@@ -195,6 +279,21 @@
         }
       }
     }
+  }
+
+  function applySkin(name) {
+    if (!SKINS[name]) name = "clasico";
+    currentSkinName = name;
+    skin = SKINS[name];
+    try {
+      localStorage.setItem(SKIN_KEY, name);
+    } catch (e) {}
+    canvas.style.background = skin.boardBg;
+    const skinSelect = document.getElementById("snake-skin-select");
+    if (skinSelect) skinSelect.value = name;
+    window.dispatchEvent(
+      new CustomEvent("av:skin", { detail: { skin: name } })
+    );
   }
 
   function loop(ts) {
@@ -227,6 +326,7 @@
     inputConsumed = true;
   });
 
+  applySkin(currentSkinName);
   resetState();
   lastTime = performance.now();
   rafId = requestAnimationFrame(loop);
@@ -250,6 +350,12 @@
       resetState();
       lastTime = performance.now();
       rafId = requestAnimationFrame(loop);
+    },
+    setSkin(name) {
+      applySkin(name);
+    },
+    getSkins() {
+      return Object.entries(SKINS).map(([key, s]) => ({ key, label: s.label }));
     },
   };
 })();

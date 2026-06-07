@@ -11,6 +11,75 @@
   const GAP = 4;
   const GRID_TOP = 60;
 
+  // ---- Visual skins ----
+  // Each skin defines colors for the 6 row roles used across all levels:
+  // red, yellow, green, cyan, magenta, hotpink
+  // Plus paddle, ball, boardBg and a style hint.
+  const SKINS = {
+    clasico: {
+      label: "Clásico",
+      style: "classic",
+      boardBg: "#0a0a0f",
+      ballColor: "#e8e8e8",
+      paddleColor: "#c0c0d0",
+      paddleHighlight: "rgba(255,255,255,0.35)",
+      rowColors: {
+        red: "#e03030",
+        yellow: "#e8c020",
+        green: "#28b040",
+        cyan: "#20b8d8",
+        magenta: "#c020c0",
+        hotpink: "#e8207a",
+      },
+    },
+    retro: {
+      label: "Retro",
+      style: "flat",
+      boardBg: "#1a1a25",
+      ballColor: "#d0d0b8",
+      paddleColor: "#4a6a8a",
+      paddleHighlight: "rgba(255,255,255,0.20)",
+      rowColors: {
+        red: "#c04040",
+        yellow: "#c8a830",
+        green: "#4a9050",
+        cyan: "#3898a8",
+        magenta: "#905890",
+        hotpink: "#b84070",
+      },
+    },
+    neon: {
+      label: "Neón",
+      style: "neon",
+      boardBg: "#000000",
+      ballColor: "#ffffff",
+      paddleColor: "#00d4ff",
+      paddleHighlight: "rgba(0,212,255,0.40)",
+      rowColors: {
+        red: "#ff2050",
+        yellow: "#fff200",
+        green: "#00ff66",
+        cyan: "#00f0ff",
+        magenta: "#ff35d4",
+        hotpink: "#ff69b4",
+      },
+    },
+  };
+
+  const SKIN_KEY = "arkanoid-skin";
+
+  function loadSkinName() {
+    try {
+      const saved = localStorage.getItem(SKIN_KEY);
+      return saved && SKINS[saved] ? saved : "clasico";
+    } catch (e) {
+      return "clasico";
+    }
+  }
+
+  let currentSkinName = loadSkinName();
+  let skin = SKINS[currentSkinName];
+
   // --- Niveles ---
   const LEVELS = [
     {
@@ -101,6 +170,101 @@
     }
   }
 
+  // --- Drawing helpers ---
+
+  function drawBlock(b) {
+    const color = skin.rowColors[b.color] || "#888888";
+    const x = b.x,
+      y = b.y,
+      w = b.w,
+      h = b.h;
+
+    ctx.save();
+    if (skin.style === "neon") {
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = color;
+      ctx.fillStyle = color;
+      ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(0,0,0,0.45)";
+      ctx.fillRect(x + 5, y + 4, w - 10, h - 8);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+    } else if (skin.style === "flat") {
+      // retro: solid color + subtle top highlight, no glow
+      ctx.fillStyle = color;
+      ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
+      ctx.fillStyle = "rgba(255,255,255,0.14)";
+      ctx.fillRect(x + 1, y + 1, w - 2, 4);
+    } else {
+      // clasico: NES-style with bright top edge and dark bottom edge
+      ctx.fillStyle = color;
+      ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
+      ctx.fillStyle = "rgba(255,255,255,0.30)";
+      ctx.fillRect(x + 1, y + 1, w - 2, 4);
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.fillRect(x + 1, y + h - 5, w - 2, 4);
+    }
+    ctx.restore();
+  }
+
+  function drawPaddle() {
+    const x = paddle.x,
+      y = paddle.y,
+      w = paddle.w,
+      h = paddle.h;
+    ctx.save();
+    if (skin.style === "neon") {
+      ctx.shadowBlur = 16;
+      ctx.shadowColor = skin.paddleColor;
+      ctx.fillStyle = skin.paddleColor;
+      ctx.fillRect(x, y, w, h);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(255,255,255,0.25)";
+      ctx.fillRect(x + 2, y + 2, w - 4, Math.floor(h * 0.35));
+    } else {
+      ctx.fillStyle = skin.paddleColor;
+      ctx.fillRect(x, y, w, h);
+      ctx.fillStyle = skin.paddleHighlight;
+      ctx.fillRect(x + 2, y + 1, w - 4, Math.floor(h * 0.4));
+    }
+    ctx.restore();
+  }
+
+  function drawBall() {
+    const x = ball.x,
+      y = ball.y,
+      r = ball.w / 2;
+    const cx = x + r,
+      cy = y + r;
+    ctx.save();
+    if (skin.style === "neon") {
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = skin.ballColor;
+    }
+    ctx.fillStyle = skin.ballColor;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r - 1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function applySkin(name) {
+    if (!SKINS[name]) name = "clasico";
+    currentSkinName = name;
+    skin = SKINS[name];
+    try {
+      localStorage.setItem(SKIN_KEY, name);
+    } catch (e) {}
+    canvas.style.background = skin.boardBg;
+    const skinSelect = document.getElementById("arkanoid-skin-select");
+    if (skinSelect) skinSelect.value = name;
+    window.dispatchEvent(
+      new CustomEvent("av:skin", { detail: { skin: name } })
+    );
+  }
+
   // --- Entrada ---
   const keys = { left: false, right: false };
 
@@ -112,7 +276,7 @@
   canvas.addEventListener("mousemove", (e) => {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
-    paddle.x = mx - paddle.w / 2; // centra paddle en cursor
+    paddle.x = mx - paddle.w / 2;
     clampPaddle();
   });
 
@@ -152,7 +316,6 @@
     explosions = [];
   }
 
-  // Click/espacio: avanza nivel si completado, si no lanza la bola
   function primaryAction() {
     if (game.state === "level_complete") {
       advanceLevel();
@@ -182,7 +345,6 @@
   });
 
   function update(now) {
-    // Fin de partida o transición: sin movimiento hasta continuar/reiniciar
     if (
       game.state === "won" ||
       game.state === "lost" ||
@@ -190,24 +352,19 @@
     )
       return;
 
-    // Teclado mueve el paddle; mouse lo movió ya en su evento.
-    // Última entrada gana por frame.
     if (keys.left) paddle.x -= paddle.speed;
     if (keys.right) paddle.x += paddle.speed;
     clampPaddle();
 
-    // Bola pegada sigue al paddle
     if (ball.stuck) {
       ball.x = paddle.x + paddle.w / 2 - ball.w / 2;
       ball.y = paddle.y - ball.h;
       return;
     }
 
-    // Movimiento
     ball.x += ball.vx;
     ball.y += ball.vy;
 
-    // Bola perdida por abajo
     if (ball.y > H) {
       game.lives -= 1;
       window.dispatchEvent(
@@ -225,7 +382,6 @@
       return;
     }
 
-    // Rebote paredes laterales
     if (ball.x <= 0) {
       ball.x = 0;
       ball.vx = -ball.vx;
@@ -236,14 +392,12 @@
       ball.vx = -ball.vx;
       playSound("bounce");
     }
-    // Rebote techo
     if (ball.y <= 0) {
       ball.y = 0;
       ball.vy = -ball.vy;
       playSound("bounce");
     }
 
-    // Rebote en paddle: ángulo por punto de impacto
     if (
       ball.vy > 0 &&
       ball.y + ball.h >= paddle.y &&
@@ -253,23 +407,21 @@
     ) {
       const ballCenter = ball.x + ball.w / 2;
       const paddleCenter = paddle.x + paddle.w / 2;
-      let hit = (ballCenter - paddleCenter) / (paddle.w / 2); // [-1, 1]
+      let hit = (ballCenter - paddleCenter) / (paddle.w / 2);
       if (hit < -1) hit = -1;
       if (hit > 1) hit = 1;
 
-      const MAX_ANGLE = Math.PI / 3; // 60° desde la vertical
+      const MAX_ANGLE = Math.PI / 3;
       const angle = hit * MAX_ANGLE;
       const speed = LEVELS[game.level].speed;
       ball.vx = speed * Math.sin(angle);
       ball.vy = -speed * Math.cos(angle);
-      ball.y = paddle.y - ball.h; // evita re-colisión
+      ball.y = paddle.y - ball.h;
       playSound("bounce");
     }
 
-    // Limpiar explosiones terminadas
     explosions = explosions.filter((e) => now - e.start < EXPLOSION_DURATION);
 
-    // Colisión con bloques (un bloque por frame)
     for (const b of blocks) {
       if (!b.alive) continue;
       if (
@@ -283,7 +435,7 @@
         window.dispatchEvent(
           new CustomEvent("av:score", { detail: { score: game.score } })
         );
-        ball.vy = -ball.vy; // rebote vertical
+        ball.vy = -ball.vy;
         playSound("break");
         explosions.push({
           color: b.color,
@@ -309,12 +461,12 @@
   }
 
   function draw(now) {
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = skin.boardBg;
     ctx.fillRect(0, 0, W, H);
 
     for (const b of blocks) {
       if (!b.alive) continue;
-      drawSprite(ctx, "block_" + b.color, b.x, b.y, b.w, b.h);
+      drawBlock(b);
     }
 
     for (const e of explosions) {
@@ -325,14 +477,15 @@
       drawFrame(ctx, EXPLOSION_FRAMES[e.color][frame], e.x, e.y, e.w, e.h);
     }
 
-    drawSprite(ctx, "paddle", paddle.x, paddle.y, paddle.w, paddle.h);
-    drawSprite(ctx, "ball", ball.x, ball.y, ball.w, ball.h);
+    drawPaddle();
+    drawBall();
 
     drawHUD();
   }
 
   function drawHUD() {
-    ctx.fillStyle = "#fff";
+    const textColor = skin.style === "neon" ? "#00f0ff" : "#ffffff";
+    ctx.fillStyle = textColor;
     ctx.font = "20px monospace";
     ctx.textBaseline = "top";
 
@@ -342,13 +495,23 @@
     ctx.textAlign = "center";
     ctx.fillText("Nivel: " + (game.level + 1), W / 2, 12);
 
-    // Vidas como sprites de bola, alineadas a la derecha
-    const ICON = 18;
+    // Vidas como pequeños círculos de bola
+    const ICON = 14;
     const ICON_GAP = 6;
-    for (let i = 0; i < game.lives; i++) {
-      const x = W - 12 - (i + 1) * ICON - i * ICON_GAP;
-      drawSprite(ctx, "ball", x, 12, ICON, ICON);
+    ctx.save();
+    if (skin.style === "neon") {
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = skin.ballColor;
     }
+    ctx.fillStyle = skin.ballColor;
+    for (let i = 0; i < game.lives; i++) {
+      const bx = W - 12 - (i + 1) * ICON - i * ICON_GAP + ICON / 2;
+      const by = 12 + ICON / 2;
+      ctx.beginPath();
+      ctx.arc(bx, by, ICON / 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
   }
 
   function loop(now) {
@@ -375,9 +538,16 @@
       resetGame();
       rafId = requestAnimationFrame(loop);
     },
+    setSkin(name) {
+      applySkin(name);
+    },
+    getSkins() {
+      return Object.entries(SKINS).map(([key, s]) => ({ key, label: s.label }));
+    },
   };
 
   buildBlocks();
+  applySkin(currentSkinName);
 
   loadSpritesheet(() => {
     rafId = requestAnimationFrame(loop);
