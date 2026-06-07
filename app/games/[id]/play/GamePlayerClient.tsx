@@ -6,6 +6,28 @@ import type { Game } from "../../../_lib/supabase/types";
 import { useUser } from "../../../_lib/user-context";
 import { GAME_ENGINES } from "../../../_lib/game-engines";
 import type { GameCanvasRef } from "../../../_lib/game-engines";
+import MobileGamepad, { type KeyMap } from "../../../_components/MobileGamepad";
+
+// Per-game synthetic-key mapping for the mobile virtual gamepad (SPEC 10).
+const KEY_MAPS: Record<string, KeyMap> = {
+  asteroids: {
+    up: "ArrowUp",
+    left: "ArrowLeft",
+    right: "ArrowRight",
+    a: " ",
+    b: "z",
+  },
+  tetris: {
+    up: "ArrowUp",
+    down: "ArrowDown",
+    left: "ArrowLeft",
+    right: "ArrowRight",
+    a: "ArrowUp",
+    b: "Shift",
+  },
+  arkanoid: { left: "ArrowLeft", right: "ArrowRight", a: " " },
+  snake: { up: "w", down: "s", left: "a", right: "d" },
+};
 
 export default function GamePlayerClient({ game }: { game: Game }) {
   const router = useRouter();
@@ -23,6 +45,7 @@ export default function GamePlayerClient({ game }: { game: Game }) {
 
   const canvasRef = useRef<GameCanvasRef>(null);
   const EngineCanvas = GAME_ENGINES[game.id];
+  const keyMap = KEY_MAPS[game.id];
 
   // Fake score/level only for mock games without a real engine
   useEffect(() => {
@@ -165,6 +188,16 @@ export default function GamePlayerClient({ game }: { game: Game }) {
           <span>CARGA · 1MB</span>
         </div>
       </div>
+
+      {/* Mobile virtual gamepad — visible only < md via CSS (SPEC 10) */}
+      {EngineCanvas && keyMap && (
+        <MobileGamepad
+          gameId={game.id}
+          keyMap={keyMap}
+          paused={paused}
+          onPauseToggle={handlePause}
+        />
+      )}
 
       {/* Game Over modal */}
       {over && (
