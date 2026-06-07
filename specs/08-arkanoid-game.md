@@ -1,6 +1,6 @@
 # SPEC 08 — Arkanoid (canvas + leaderboard)
 
-> **Status:** Approved · **Depende de:** 05-asteroids-canvas, 06-games-table-leaderboard · **Fecha:** 2026-06-06
+> **Status:** Implemented · **Depende de:** 05-asteroids-canvas, 06-games-table-leaderboard · **Fecha:** 2026-06-06
 > **Objetivo:** Integrar Arkanoid como juego canvas en Arcade Vault con leaderboard anónimo.
 
 ---
