@@ -25,6 +25,10 @@ npx next typegen # generate PageProps/LayoutProps/RouteContext helpers
 - **`/add-game`** — genera un spec (`specs/NN-<slug>-game.md`) para añadir un nuevo juego canvas. Acepta una carpeta de `references/started-games/` (ej: `03-tetris`) o una descripción libre. Solo produce el spec; no escribe código. Implementar después con `/spec-impl NN-<slug>-game`.
 - **`/spec`, `/spec-impl`** — flujo spec-driven maestro (en `.agents/skills/`). Todo juego/feature pasa por un spec en `specs/` antes de implementarse.
 
+## Agents
+
+- **`game-planner`** (`.claude/agents/game-planner.md`) — subagente que decide el **siguiente** juego a añadir. Lee `references/implemented-games.md` y `references/game-suggestions-todo.md` (su memoria en disco) para no repetir sugerencias, aplica el rubro de encaje con la plataforma (canvas + vanilla JS, score numérico, contrato `av:*`, categoría/color), recomienda UN juego, registra la fila en `references/game-suggestions-todo.md` y deriva a `/add-game`. No escribe spec ni código. Flujo: `game-planner` → `/add-game` → `/spec-impl`.
+
 ## Stack
 
 - **Next.js 16.2.7** — App Router only; Pages Router unused
