@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import type { Game } from "../../../_lib/data";
+import type { Game } from "../../../_lib/supabase/types";
 import { useUser } from "../../../_lib/user-context";
 import { GAME_ENGINES } from "../../../_lib/game-engines";
 import type { GameCanvasRef } from "../../../_lib/game-engines";

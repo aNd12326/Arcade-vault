@@ -1,7 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { Game, ScoreRow } from "../../_lib/data";
+import type { Game } from "../../_lib/supabase/types";
+
+type ScoreRow = { rank: number; name: string; score: number; date: string };
 
 function rankClass(rank: number) {
   if (rank === 1) return " top1";
@@ -24,7 +26,10 @@ export default function GameDetailClient({
       {/* left column: cover + info */}
       <div>
         <div className="detail-cover">
-          <div className={`cover-bg ${game.cover}`} style={{ position: "absolute", inset: 0 }} />
+          <div
+            className={`cover-bg ${game.cover}`}
+            style={{ position: "absolute", inset: 0 }}
+          />
         </div>
 
         <div style={{ marginTop: 20 }} className="detail-info">
@@ -41,18 +46,14 @@ export default function GameDetailClient({
 
           <div className="stat-strip">
             <div>
-              <div className="l">Partidas</div>
-              <div className="v">{game.plays}</div>
-            </div>
-            <div>
-              <div className="l">Mejor global</div>
-              <div className="v" style={{ color: "var(--magenta)", textShadow: "0 0 6px rgba(255,0,110,0.5)" }}>
-                {game.best.toLocaleString("es-ES")}
-              </div>
-            </div>
-            <div>
               <div className="l">Dificultad</div>
-              <div className="v" style={{ color: "var(--yellow)", textShadow: "0 0 6px rgba(245,255,0,0.5)" }}>
+              <div
+                className="v"
+                style={{
+                  color: "var(--yellow)",
+                  textShadow: "0 0 6px rgba(245,255,0,0.5)",
+                }}
+              >
                 ★ ★ ★ ☆ ☆
               </div>
             </div>
@@ -81,7 +82,13 @@ export default function GameDetailClient({
               <div className="rk">#{String(row.rank).padStart(2, "0")}</div>
               <div className="pl">
                 {row.name}
-                <div style={{ fontSize: 10, color: "var(--ink-faint)", letterSpacing: "0.1em" }}>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: "var(--ink-faint)",
+                    letterSpacing: "0.1em",
+                  }}
+                >
                   {row.date}
                 </div>
               </div>

@@ -2,7 +2,40 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { GAMES } from "./_lib/data";
+type MiniGame = { id: string; cover: string; title: string; cat: string };
+const MINI_GAMES: MiniGame[] = [
+  {
+    id: "bloque-buster",
+    cover: "cover-bricks",
+    title: "BLOQUE BUSTER",
+    cat: "ARCADE",
+  },
+  {
+    id: "tetro-caos",
+    cover: "cover-tetro",
+    title: "TETRO CAOS",
+    cat: "PUZZLE",
+  },
+  {
+    id: "serpiente-nx",
+    cover: "cover-snake",
+    title: "SERPIENTE NX",
+    cat: "ARCADE",
+  },
+  {
+    id: "glot-runner",
+    cover: "cover-glot",
+    title: "GLOT RUNNER",
+    cat: "ARCADE",
+  },
+  {
+    id: "invasores-z",
+    cover: "cover-invaders",
+    title: "INVASORES Z",
+    cat: "SHOOTER",
+  },
+  { id: "asteroids", cover: "cover-rocas", title: "ASTEROIDS", cat: "SHOOTER" },
+];
 
 // ── Internal hooks ────────────────────────────────────────────────────────────
 
@@ -132,13 +165,7 @@ function FloatingSilhouettes() {
   );
 }
 
-function MiniCard({
-  game,
-  onClick,
-}: {
-  game: (typeof GAMES)[0];
-  onClick: () => void;
-}) {
+function MiniCard({ game, onClick }: { game: MiniGame; onClick: () => void }) {
   return (
     <div className="mini-card" onClick={onClick}>
       <div className="mini-cover">
@@ -358,7 +385,7 @@ export default function HomePage() {
           <div className="section-rule" />
         </div>
         <div className="mini-rail">
-          {GAMES.slice(0, 6).map((g) => (
+          {MINI_GAMES.map((g) => (
             <MiniCard
               key={g.id}
               game={g}
