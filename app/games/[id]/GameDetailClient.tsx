@@ -1,9 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { Game } from "../../_lib/supabase/types";
-
-type ScoreRow = { rank: number; name: string; score: number; date: string };
+import type { Game, Score } from "../../_lib/supabase/types";
 
 function rankClass(rank: number) {
   if (rank === 1) return " top1";
@@ -12,12 +10,17 @@ function rankClass(rank: number) {
   return "";
 }
 
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+}
+
 export default function GameDetailClient({
   game,
   scores,
 }: {
   game: Game;
-  scores: ScoreRow[];
+  scores: Score[];
 }) {
   const router = useRouter();
 
@@ -73,28 +76,44 @@ export default function GameDetailClient({
         </div>
       </div>
 
-      {/* right column: leaderboard */}
+      {/* right column: top 5 leaderboard */}
       <aside>
         <div className="leaderboard">
-          <h3>MEJORES PUNTUACIONES</h3>
-          {scores.map((row, i) => (
-            <div key={row.rank} className={`lb-row${rankClass(row.rank)}`}>
-              <div className="rk">#{String(row.rank).padStart(2, "0")}</div>
-              <div className="pl">
-                {row.name}
-                <div
-                  style={{
-                    fontSize: 10,
-                    color: "var(--ink-faint)",
-                    letterSpacing: "0.1em",
-                  }}
-                >
-                  {row.date}
-                </div>
-              </div>
-              <div className="sc">{row.score.toLocaleString("es-ES")}</div>
+          <h3>TOP 5 PUNTUACIONES</h3>
+          {scores.length === 0 ? (
+            <div
+              style={{
+                padding: "32px 0",
+                textAlign: "center",
+                color: "var(--ink-faint)",
+                fontSize: 12,
+                letterSpacing: "0.08em",
+              }}
+            >
+              Sin puntuaciones aún.
+              <br />
+              ¡Sé el primero!
             </div>
-          ))}
+          ) : (
+            scores.map((row, i) => (
+              <div key={row.id} className={`lb-row${rankClass(i + 1)}`}>
+                <div className="rk">#{String(i + 1).padStart(2, "0")}</div>
+                <div className="pl">
+                  {row.nickname}
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: "var(--ink-faint)",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    {formatDate(row.created_at)}
+                  </div>
+                </div>
+                <div className="sc">{row.score.toLocaleString("es-ES")}</div>
+              </div>
+            ))
+          )}
         </div>
       </aside>
     </div>
