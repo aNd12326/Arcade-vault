@@ -2,13 +2,17 @@
   const canvas = document.getElementById("av-canvas");
   const ctx = canvas.getContext("2d");
 
-  const CELL = 40;
-  const COLS = 20;
-  const ROWS = 20;
+  const CELL = 32;
+  const COLS = 25;
+  const ROWS = 25;
 
   const FRUIT_KEYS = Object.keys(window.SPRITE_ATLAS.fruits);
 
   const fruitsImg = new Image();
+  let imgReady = false;
+  fruitsImg.onload = () => {
+    imgReady = true;
+  };
   fruitsImg.src = window.SPRITE_ATLAS.sources.fruits;
 
   let snake,
@@ -92,7 +96,8 @@
       return;
     }
 
-    for (let i = 0; i < snake.length; i++) {
+    // Exclude last segment: it moves away this step (tail chase is valid)
+    for (let i = 0; i < snake.length - 1; i++) {
       if (snake[i].x === head.x && snake[i].y === head.y) {
         triggerGameOver();
         return;
@@ -143,7 +148,7 @@
       ctx.stroke();
     }
 
-    const pad = 3;
+    const pad = 2;
     for (let i = snake.length - 1; i >= 0; i--) {
       const seg = snake[i];
       const isHead = i === 0;
@@ -153,24 +158,43 @@
         seg.y * CELL + pad,
         CELL - pad * 2,
         CELL - pad * 2,
-        6,
+        4,
         color
       );
     }
 
-    const sp = window.SPRITE_ATLAS.fruits[fruit.sprite];
-    const margin = 4;
-    ctx.drawImage(
-      fruitsImg,
-      sp.x,
-      sp.y,
-      sp.w,
-      sp.h,
-      fruit.x * CELL + margin,
-      fruit.y * CELL + margin,
-      CELL - margin * 2,
-      CELL - margin * 2
-    );
+    const fx = fruit.x * CELL + CELL / 2;
+    const fy = fruit.y * CELL + CELL / 2;
+    const fr = CELL / 2 - 2;
+
+    // solid yellow circle — always visible regardless of sprite
+    ctx.fillStyle = "#facc15";
+    ctx.beginPath();
+    ctx.arc(fx, fy, fr, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (imgReady) {
+      const sp = window.SPRITE_ATLAS?.fruits?.[fruit.sprite];
+      if (sp) {
+        const drawSize = CELL - 4;
+        try {
+          ctx.globalAlpha = 0.92;
+          ctx.drawImage(
+            fruitsImg,
+            sp.x,
+            sp.y,
+            sp.w,
+            sp.h,
+            fruit.x * CELL + 2,
+            fruit.y * CELL + 2,
+            drawSize,
+            drawSize
+          );
+        } finally {
+          ctx.globalAlpha = 1;
+        }
+      }
+    }
   }
 
   function loop(ts) {
