@@ -2826,3 +2826,69 @@ a {
 .term-body .caret {
   animation: blink 1s steps(1) infinite;
 }
+
+/* SPEC 10 — mobile touch controls */
+.mobile-gamepad {
+  display: none;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  margin-top: 18px;
+}
+.mobile-gamepad-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  max-width: 420px;
+}
+.mobile-dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  grid-template-rows: repeat(3, 56px);
+  gap: 6px;
+}
+.mobile-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.mobile-gamepad-footer {
+  justify-content: center;
+  gap: 16px;
+}
+.mobile-skin {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
+}
+.mobile-skin select {
+  background: #1a1a25;
+  color: #e0e0e0;
+  border: 1px solid #3a3a5a;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 767px) {
+  /* hide desktop HUD (stats + PAUSA/FIN/SALIR) on mobile */
+  .av-player .player-hud {
+    display: none;
+  }
+  /* hide the in-canvas skin selector (it lives inside each Canvas component) */
+  div:has(> select[id$="-skin-select"]) {
+    display: none !important;
+  }
+  /* show the virtual gamepad */
+  .mobile-gamepad {
+    display: flex;
+  }
+}
