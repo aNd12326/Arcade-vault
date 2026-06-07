@@ -23,4 +23,5 @@ export const GAME_ENGINES: Partial<
   Record<string, LazyExoticComponent<GameCanvasComponent>>
 > = {
   asteroids: lazy(() => import("../_games/asteroids/AsteroidsCanvas")),
+  tetris: lazy(() => import("../_games/tetris/TetrisCanvas")),
 };
