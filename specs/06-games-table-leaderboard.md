@@ -1,6 +1,6 @@
 # SPEC 06 — Games Table + Leaderboard
 
-> **Status:** Approved · **Depende de:** 04-supabase-integration, 05-asteroids-canvas · **Fecha:** 2026-06-06
+> **Status:** Implementado · **Depende de:** 04-supabase-integration, 05-asteroids-canvas · **Fecha:** 2026-06-06
 > **Objetivo:** Migrar el catálogo de juegos a Supabase y añadir un sistema de
 > leaderboard por juego con submit anónimo desde el modal de game over.
 
@@ -156,17 +156,17 @@ export type Score = {
 
 ## Acceptance criteria
 
-- [ ] Tablas `games` y `scores` existen en Supabase con el schema definido.
-- [ ] Fila `asteroids` presente en `games`.
-- [ ] `app/_lib/data.ts` eliminado; `npx tsc --noEmit` sin errores.
-- [ ] `/games` muestra card de Asteroids con datos desde Supabase.
-- [ ] `/games/asteroids` muestra info del juego desde Supabase + strip top 5 scores.
-- [ ] `/hall-of-fame` muestra tabla real top 10 por juego (vacía si no hay scores).
-- [ ] Modal game over de Asteroids tiene input nickname + botón "Publicar score".
-- [ ] Score publicado aparece en `/hall-of-fame` y en strip de `/games/asteroids`.
-- [ ] Nickname vacío o > 20 chars → validación impide submit.
-- [ ] Score < 0 → API rechaza con 400.
-- [ ] `npm run build` limpio. Rutas `/games`, `/games/[id]`, `/games/[id]/play`,
+- [x] Tablas `games` y `scores` existen en Supabase con el schema definido.
+- [x] Fila `asteroids` presente en `games`.
+- [x] `app/_lib/data.ts` eliminado; `npx tsc --noEmit` sin errores.
+- [x] `/games` muestra card de Asteroids con datos desde Supabase.
+- [x] `/games/asteroids` muestra info del juego desde Supabase + strip top 5 scores.
+- [x] `/hall-of-fame` muestra tabla real top 10 por juego (vacía si no hay scores).
+- [x] Modal game over de Asteroids tiene input nickname + botón "Publicar score".
+- [x] Score publicado aparece en `/hall-of-fame` y en strip de `/games/asteroids`.
+- [x] Nickname vacío o > 20 chars → validación impide submit.
+- [x] Score < 0 → API rechaza con 400.
+- [x] `npm run build` limpio. Rutas `/games`, `/games/[id]`, `/games/[id]/play`,
       `/hall-of-fame` funcionales sin regresiones.
 
 ---
