@@ -70,6 +70,28 @@ body {
   border-radius: 4px;
 }
 
+/* ---- Selector de skin ---- */
+#skin-select {
+  width: 100%;
+  background: #1a1a25;
+  color: #e0e0e0;
+  border: 1px solid #3a3a5a;
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+#skin-select:hover,
+#skin-select:focus {
+  border-color: #7aa2f7;
+  outline: none;
+}
+
 /* ---- Controles ---- */
 .controls ul {
   list-style: none;
@@ -149,4 +171,292 @@ kbd {
 
 #restart-btn:hover {
   background: #9bbdff;
+}
+
+/* ---- Menú de pausa ---- */
+.menu-box {
+  gap: 18px;
+  min-width: 240px;
+  padding: 24px 28px;
+  background: rgba(20, 20, 34, 0.92);
+  border: 1px solid #2a2a3a;
+  border-radius: 10px;
+}
+
+.menu-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  color: #7aa2f7;
+}
+
+.menu-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.menu-view.hidden {
+  display: none;
+}
+
+.menu-btn {
+  background: #22223a;
+  color: #e0e0e0;
+  border: 1px solid #3a3a5a;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.menu-btn:hover {
+  background: #2e2e50;
+  border-color: #7aa2f7;
+}
+
+#resume-btn {
+  background: #7aa2f7;
+  color: #0f0f17;
+  border-color: #7aa2f7;
+}
+
+#resume-btn:hover {
+  background: #9bbdff;
+}
+
+.menu-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid #2a2a3a;
+}
+
+.menu-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #555570;
+  font-weight: 600;
+}
+
+.menu-hint {
+  font-size: 10px;
+  color: #555570;
+}
+
+.level-selector {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.step-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  background: #22223a;
+  border: 1px solid #3a3a5a;
+  color: #e0e0e0;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.step-btn:hover {
+  background: #2e2e50;
+  border-color: #7aa2f7;
+}
+
+.step-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.level-value {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 26px;
+  font-weight: 700;
+  color: #7aa2f7;
+  min-width: 34px;
+  text-align: center;
+}
+
+.menu-controls-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.menu-controls-list li {
+  font-size: 12px;
+  color: #aaa;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.menu-controls-list li span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ---- Pantalla de inicio / récords ---- */
+#start-title {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  color: #7aa2f7;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #888;
+  border: 1px solid #3a3a5a;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.btn-secondary:hover {
+  color: #e57373;
+  border-color: #e57373;
+}
+
+/* ---- Tabla de récords ---- */
+.records {
+  width: 240px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.records-title {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #555570;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.records-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.records-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #cfd3e0;
+}
+
+.records-list li.empty {
+  justify-content: center;
+  color: #555570;
+  font-style: italic;
+}
+
+.records-list li.hl {
+  background: rgba(122, 162, 247, 0.2);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px #7aa2f7;
+}
+
+.records-list .rank {
+  width: 18px;
+  color: #7aa2f7;
+  font-weight: 700;
+  text-align: right;
+}
+
+.records-list .rname {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.records-list .rscore {
+  font-weight: 700;
+  color: #ffd54f;
+}
+
+.records-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #2a2a3a;
+  font-size: 12px;
+  color: #888;
+}
+
+.records-stats b {
+  color: #81c784;
+}
+
+/* ---- Entrada de nombre ---- */
+.name-entry {
+  display: flex;
+  gap: 8px;
+}
+
+.name-entry.hidden {
+  display: none;
+}
+
+#name-input {
+  flex: 1;
+  background: #1a1a25;
+  border: 1px solid #3a3a5a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #e0e0e0;
+  font-family: inherit;
+  outline: none;
+}
+
+#name-input:focus {
+  border-color: #7aa2f7;
+}
+
+#save-btn {
+  background: #81c784;
+  color: #0f0f17;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#save-btn:hover {
+  background: #a5d6a7;
+}
+
+.hidden {
+  display: none;
 }

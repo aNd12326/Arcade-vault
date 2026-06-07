@@ -24,10 +24,24 @@
           <span class="label">LEVEL</span>
           <span class="value" id="level">1</span>
         </div>
+        <div class="panel-section">
+          <span class="label">COMBO</span>
+          <span class="value" id="combo">—</span>
+        </div>
 
         <div class="panel-section">
           <span class="label">NEXT</span>
           <canvas id="next-canvas" width="120" height="120"></canvas>
+        </div>
+
+        <div class="panel-section">
+          <span class="label">SKIN</span>
+          <select id="skin-select">
+            <option value="retro">Retro</option>
+            <option value="neon">Neón</option>
+            <option value="pastel">Pastel</option>
+            <option value="pixel">Pixel art</option>
+          </select>
         </div>
 
         <div class="panel-section controls">
@@ -37,7 +51,7 @@
             <li><kbd>↑</kbd> rotar</li>
             <li><kbd>↓</kbd> bajar</li>
             <li><kbd>Space</kbd> caída</li>
-            <li><kbd>P</kbd> pausa</li>
+            <li><kbd>P</kbd><kbd>Esc</kbd> pausa</li>
           </ul>
         </div>
       </aside>
@@ -47,7 +61,57 @@
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
+        <div id="name-entry" class="name-entry hidden">
+          <input id="name-input" type="text" maxlength="12" placeholder="Tu nombre" autocomplete="off" />
+          <button id="save-btn">Guardar</button>
+        </div>
+        <div id="overlay-records" class="records"></div>
         <button id="restart-btn">Reiniciar</button>
+      </div>
+    </div>
+
+    <div id="pause-menu" class="overlay hidden">
+      <div class="overlay-box menu-box">
+        <p class="menu-title">PAUSA</p>
+
+        <!-- Vista principal del menú -->
+        <div id="menu-main" class="menu-view">
+          <button class="menu-btn" id="resume-btn">Reanudar</button>
+          <button class="menu-btn" id="menu-restart-btn">Reiniciar</button>
+          <button class="menu-btn" id="show-controls-btn">Ver controles</button>
+
+          <div class="menu-section">
+            <span class="menu-label">NIVEL INICIAL</span>
+            <div class="level-selector">
+              <button class="step-btn" id="level-minus" aria-label="Bajar nivel">−</button>
+              <span class="level-value" id="start-level-value">1</span>
+              <button class="step-btn" id="level-plus" aria-label="Subir nivel">+</button>
+            </div>
+            <span class="menu-hint">Se aplica en la próxima partida</span>
+          </div>
+        </div>
+
+        <!-- Vista de controles -->
+        <div id="menu-controls" class="menu-view hidden">
+          <span class="menu-label">CONTROLES</span>
+          <ul class="menu-controls-list">
+            <li><span><kbd>←</kbd><kbd>→</kbd></span> mover</li>
+            <li><span><kbd>↑</kbd> / <kbd>X</kbd></span> rotar</li>
+            <li><span><kbd>↓</kbd></span> bajar</li>
+            <li><span><kbd>Space</kbd></span> caída instantánea</li>
+            <li><span><kbd>P</kbd> / <kbd>Esc</kbd></span> pausa</li>
+          </ul>
+          <button class="menu-btn" id="controls-back-btn">Volver</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="start-overlay" class="overlay">
+      <div class="overlay-box">
+        <p id="start-title">TETRIS</p>
+        <div id="start-records" class="records"></div>
+        <button id="play-btn">Jugar</button>
+        <button id="reset-btn" class="btn-secondary">Resetear récords</button>
       </div>
     </div>
   </div>
