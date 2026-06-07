@@ -6,6 +6,82 @@
   const W = 800;
   const H = 600;
 
+  // ── Visual skins ──────────────────────────────────────────────────────────────
+  const SKINS = {
+    clasico: {
+      label: "Clásico",
+      boardBg: "#000000",
+      shipColor: "#ffffff",
+      asteroidColor: "#ffffff",
+      bulletColor: "#ffffff",
+      particleColor: "255,255,255",
+      thrustColor: "rgba(255,130,0,0.85)",
+      hudColor: "#ffffff",
+      lifeColor: "#ffffff",
+      shadowBlur: 0,
+      shadowColor: "transparent",
+      asteroidLineWidth: 1.5,
+      shipLineWidth: 1.5,
+    },
+    retro: {
+      label: "Retro",
+      boardBg: "#0d1a0d",
+      shipColor: "#39ff14",
+      asteroidColor: "#a0c878",
+      bulletColor: "#c8ff80",
+      particleColor: "160,200,120",
+      thrustColor: "rgba(255,200,0,0.80)",
+      hudColor: "#39ff14",
+      lifeColor: "#39ff14",
+      shadowBlur: 0,
+      shadowColor: "transparent",
+      asteroidLineWidth: 1.5,
+      shipLineWidth: 1.5,
+    },
+    neon: {
+      label: "Neón",
+      boardBg: "#000000",
+      shipColor: "#00f0ff",
+      asteroidColor: "#ff35d4",
+      bulletColor: "#fff200",
+      particleColor: "255,53,212",
+      thrustColor: "rgba(0,240,255,0.90)",
+      hudColor: "#00f0ff",
+      lifeColor: "#00f0ff",
+      shadowBlur: 14,
+      shadowColor: "#00f0ff",
+      asteroidLineWidth: 2,
+      shipLineWidth: 2,
+    },
+  };
+
+  const SKIN_KEY = "asteroids-skin";
+
+  function loadSkinName() {
+    try {
+      const saved = localStorage.getItem(SKIN_KEY);
+      return saved && SKINS[saved] ? saved : "clasico";
+    } catch (e) {
+      return "clasico";
+    }
+  }
+
+  let currentSkinName = loadSkinName();
+  let skin = SKINS[currentSkinName];
+
+  function applySkin(name) {
+    if (!SKINS[name]) name = "clasico";
+    currentSkinName = name;
+    skin = SKINS[name];
+    try {
+      localStorage.setItem(SKIN_KEY, name);
+    } catch (e) {}
+    canvas.style.background = skin.boardBg;
+    window.dispatchEvent(
+      new CustomEvent("av:skin", { detail: { skin: name } })
+    );
+  }
+
   // ── Input ─────────────────────────────────────────────────────────────────────
   const keys = {};
   const justPressed = {};
@@ -57,10 +133,16 @@
     }
 
     draw() {
-      ctx.fillStyle = "#fff";
+      ctx.save();
+      if (skin.shadowBlur > 0) {
+        ctx.shadowBlur = skin.shadowBlur * 0.6;
+        ctx.shadowColor = skin.bulletColor;
+      }
+      ctx.fillStyle = skin.bulletColor;
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     }
   }
 
@@ -111,8 +193,12 @@
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.rot);
-      ctx.strokeStyle = "#fff";
-      ctx.lineWidth = 1.5;
+      if (skin.shadowBlur > 0) {
+        ctx.shadowBlur = skin.shadowBlur;
+        ctx.shadowColor = skin.asteroidColor;
+      }
+      ctx.strokeStyle = skin.asteroidColor;
+      ctx.lineWidth = skin.asteroidLineWidth;
       ctx.lineJoin = "round";
       ctx.beginPath();
       ctx.moveTo(this.verts[0][0], this.verts[0][1]);
@@ -184,8 +270,12 @@
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.angle);
-      ctx.strokeStyle = "#fff";
-      ctx.lineWidth = 1.5;
+      if (skin.shadowBlur > 0) {
+        ctx.shadowBlur = skin.shadowBlur;
+        ctx.shadowColor = skin.shadowColor;
+      }
+      ctx.strokeStyle = skin.shipColor;
+      ctx.lineWidth = skin.shipLineWidth;
       ctx.lineJoin = "round";
 
       ctx.beginPath();
@@ -197,11 +287,12 @@
       ctx.stroke();
 
       if (this.thrusting && Math.random() > 0.35) {
+        ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.moveTo(-8, -4);
         ctx.lineTo(-8 - rand(6, 14), 0);
         ctx.lineTo(-8, 4);
-        ctx.strokeStyle = "rgba(255, 130, 0, 0.85)";
+        ctx.strokeStyle = skin.thrustColor;
         ctx.stroke();
       }
 
@@ -232,7 +323,7 @@
 
     draw() {
       const alpha = this.ttl / this.life;
-      ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(2)})`;
+      ctx.strokeStyle = `rgba(${skin.particleColor},${alpha.toFixed(2)})`;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(this.x, this.y);
@@ -375,7 +466,11 @@
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(-Math.PI / 2);
-    ctx.strokeStyle = "#fff";
+    if (skin.shadowBlur > 0) {
+      ctx.shadowBlur = skin.shadowBlur * 0.5;
+      ctx.shadowColor = skin.lifeColor;
+    }
+    ctx.strokeStyle = skin.lifeColor;
     ctx.lineWidth = 1.2;
     ctx.lineJoin = "round";
     ctx.beginPath();
@@ -389,7 +484,12 @@
   }
 
   function drawHUD() {
-    ctx.fillStyle = "#fff";
+    ctx.save();
+    if (skin.shadowBlur > 0) {
+      ctx.shadowBlur = skin.shadowBlur * 0.5;
+      ctx.shadowColor = skin.hudColor;
+    }
+    ctx.fillStyle = skin.hudColor;
     ctx.font = "15px monospace";
 
     ctx.textAlign = "left";
@@ -397,12 +497,13 @@
 
     ctx.textAlign = "center";
     ctx.fillText(`NIVEL ${level}`, W / 2, 26);
+    ctx.restore();
 
     for (let i = 0; i < lives; i++) drawLifeIcon(W - 16 - i * 22, 18);
   }
 
   function draw() {
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = skin.boardBg;
     ctx.fillRect(0, 0, W, H);
 
     particles.forEach((p) => p.draw());
@@ -451,8 +552,19 @@
     }
   }
 
-  window.ASTEROIDS = { pause, resume, restart };
-
+  applySkin(currentSkinName);
   initGame();
   requestAnimationFrame(loop);
+
+  window.ASTEROIDS = {
+    pause,
+    resume,
+    restart,
+    setSkin(name) {
+      applySkin(name);
+    },
+    getSkins() {
+      return Object.entries(SKINS).map(([key, s]) => ({ key, label: s.label }));
+    },
+  };
 })();
