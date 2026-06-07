@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { Game, ScoreRow } from "../../_lib/data";
+import type { Game, Score } from "../../_lib/supabase/types";
 
 function rankClass(rank: number) {
   if (rank === 1) return " top1";
@@ -10,12 +10,17 @@ function rankClass(rank: number) {
   return "";
 }
 
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+}
+
 export default function GameDetailClient({
   game,
   scores,
 }: {
   game: Game;
-  scores: ScoreRow[];
+  scores: Score[];
 }) {
   const router = useRouter();
 
@@ -24,7 +29,10 @@ export default function GameDetailClient({
       {/* left column: cover + info */}
       <div>
         <div className="detail-cover">
-          <div className={`cover-bg ${game.cover}`} style={{ position: "absolute", inset: 0 }} />
+          <div
+            className={`cover-bg ${game.cover}`}
+            style={{ position: "absolute", inset: 0 }}
+          />
         </div>
 
         <div style={{ marginTop: 20 }} className="detail-info">
@@ -41,18 +49,14 @@ export default function GameDetailClient({
 
           <div className="stat-strip">
             <div>
-              <div className="l">Partidas</div>
-              <div className="v">{game.plays}</div>
-            </div>
-            <div>
-              <div className="l">Mejor global</div>
-              <div className="v" style={{ color: "var(--magenta)", textShadow: "0 0 6px rgba(255,0,110,0.5)" }}>
-                {game.best.toLocaleString("es-ES")}
-              </div>
-            </div>
-            <div>
               <div className="l">Dificultad</div>
-              <div className="v" style={{ color: "var(--yellow)", textShadow: "0 0 6px rgba(245,255,0,0.5)" }}>
+              <div
+                className="v"
+                style={{
+                  color: "var(--yellow)",
+                  textShadow: "0 0 6px rgba(245,255,0,0.5)",
+                }}
+              >
                 ★ ★ ★ ☆ ☆
               </div>
             </div>
@@ -72,22 +76,44 @@ export default function GameDetailClient({
         </div>
       </div>
 
-      {/* right column: leaderboard */}
+      {/* right column: top 5 leaderboard */}
       <aside>
         <div className="leaderboard">
-          <h3>MEJORES PUNTUACIONES</h3>
-          {scores.map((row, i) => (
-            <div key={row.rank} className={`lb-row${rankClass(row.rank)}`}>
-              <div className="rk">#{String(row.rank).padStart(2, "0")}</div>
-              <div className="pl">
-                {row.name}
-                <div style={{ fontSize: 10, color: "var(--ink-faint)", letterSpacing: "0.1em" }}>
-                  {row.date}
-                </div>
-              </div>
-              <div className="sc">{row.score.toLocaleString("es-ES")}</div>
+          <h3>TOP 5 PUNTUACIONES</h3>
+          {scores.length === 0 ? (
+            <div
+              style={{
+                padding: "32px 0",
+                textAlign: "center",
+                color: "var(--ink-faint)",
+                fontSize: 12,
+                letterSpacing: "0.08em",
+              }}
+            >
+              Sin puntuaciones aún.
+              <br />
+              ¡Sé el primero!
             </div>
-          ))}
+          ) : (
+            scores.map((row, i) => (
+              <div key={row.id} className={`lb-row${rankClass(i + 1)}`}>
+                <div className="rk">#{String(i + 1).padStart(2, "0")}</div>
+                <div className="pl">
+                  {row.nickname}
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: "var(--ink-faint)",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    {formatDate(row.created_at)}
+                  </div>
+                </div>
+                <div className="sc">{row.score.toLocaleString("es-ES")}</div>
+              </div>
+            ))
+          )}
         </div>
       </aside>
     </div>

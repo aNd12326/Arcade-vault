@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { GAMES, seededScores } from "../../_lib/data";
+import { getGame, getTopScores } from "../../_lib/supabase/queries";
 import GameDetailClient from "./GameDetailClient";
 
 export default async function GameDetailPage({
@@ -8,10 +8,8 @@ export default async function GameDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const game = GAMES.find((g) => g.id === id);
+  const [game, scores] = await Promise.all([getGame(id), getTopScores(id, 5)]);
   if (!game) notFound();
-
-  const scores = seededScores(game.id.length * 17 + 3, 10);
 
   return <GameDetailClient game={game} scores={scores} />;
 }

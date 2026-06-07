@@ -1,0 +1,50 @@
+import { createClient } from "./server";
+import type { Game, Score } from "./types";
+
+export async function getGames(): Promise<Game[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("games")
+    .select("*")
+    .order("created_at");
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function getGame(id: string): Promise<Game | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("games")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (error) return null;
+  return data;
+}
+
+export async function getTopScores(
+  gameId: string,
+  limit: number
+): Promise<Score[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("scores")
+    .select("*")
+    .eq("game_id", gameId)
+    .order("score", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function insertScore(
+  gameId: string,
+  nickname: string,
+  score: number
+): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("scores")
+    .insert({ game_id: gameId, nickname, score });
+  if (error) throw new Error(error.message);
+}
