@@ -1,6 +1,6 @@
 # SPEC 05 — Juego Asteroids (canvas real)
 
-> **Status:** Approved · **Depende de:** 01-mvp-visual, 04-supabase-integration · **Fecha:** 2026-06-06
+> **Status:** Implementado · **Depende de:** 01-mvp-visual, 04-supabase-integration · **Fecha:** 2026-06-06
 > **Objetivo:** Integrar el juego Asteroids (canvas HTML5 vanilla) en la plataforma
 > Arcade Vault como ruta `/games/asteroids/play`, con HUD React sincronizado vía
 > CustomEvents y control de pausa/game-over desde el contenedor Next.js.
