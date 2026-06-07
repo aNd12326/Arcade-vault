@@ -28,6 +28,7 @@ npx next typegen # generate PageProps/LayoutProps/RouteContext helpers
 ## Agents
 
 - **`game-planner`** (`.claude/agents/game-planner.md`) — subagente que decide el **siguiente** juego a añadir. Lee `references/implemented-games.md` y `references/game-suggestions-todo.md` (su memoria en disco) para no repetir sugerencias, aplica el rubro de encaje con la plataforma (canvas + vanilla JS, score numérico, contrato `av:*`, categoría/color), recomienda UN juego, registra la fila en `references/game-suggestions-todo.md` y deriva a `/add-game`. No escribe spec ni código. Flujo: `game-planner` → `/add-game` → `/spec-impl`.
+- **`game-jam`** (`.claude/agents/game-jam.md`) — subagente que, dado un **tema**, diseña UN juego arcade nuevo y genera **≥2 specs completos** en `specs/game-jam/<game-id>/`: `01-<game-id>-core.md` (plataforma core + integración Supabase) y `02-<game-id>-<feature>.md` (feature complementaria de alcance distinto). Sigue el formato de `specs/07-09` y el contrato de props (`paused`, `onScoreChange/onLivesChange/onLevelChange/onGameOver`). No escribe código. Flujo: `game-jam` (tema → specs) → revisar → `/spec-impl`.
 
 ## Stack
 
