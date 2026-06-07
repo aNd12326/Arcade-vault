@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import type { Game } from "../../../_lib/data";
 import { useUser } from "../../../_lib/user-context";
+import { GAME_ENGINES } from "../../../_lib/game-engines";
+import type { GameCanvasRef } from "../../../_lib/game-engines";
 
 export default function GamePlayerClient({ game }: { game: Game }) {
   const router = useRouter();
@@ -17,15 +19,35 @@ export default function GamePlayerClient({ game }: { game: Game }) {
   const [name, setName] = useState((user?.name ?? "INVITADO").slice(0, 10));
   const [saved, setSaved] = useState(false);
 
+  const canvasRef = useRef<GameCanvasRef>(null);
+  const EngineCanvas = GAME_ENGINES[game.id];
+
+  // Fake score/level only for mock games without a real engine
   useEffect(() => {
+    if (EngineCanvas) return;
     if (over || paused) return;
-    const t = setInterval(() => setScore((s) => s + Math.floor(10 + Math.random() * 90)), 220);
+    const t = setInterval(
+      () => setScore((s) => s + Math.floor(10 + Math.random() * 90)),
+      220
+    );
     return () => clearInterval(t);
-  }, [over, paused]);
+  }, [EngineCanvas, over, paused]);
 
   useEffect(() => {
+    if (EngineCanvas) return;
     if (score > 0 && score % 2500 < 100) setLevel((l) => Math.min(l + 1, 9));
-  }, [score]);
+  }, [EngineCanvas, score]);
+
+  const handlePause = () => {
+    if (EngineCanvas) {
+      if (paused) {
+        canvasRef.current?.resume();
+      } else {
+        canvasRef.current?.pause();
+      }
+    }
+    setPaused((p) => !p);
+  };
 
   const endGame = () => setOver(true);
 
@@ -36,6 +58,7 @@ export default function GamePlayerClient({ game }: { game: Game }) {
     setPaused(false);
     setOver(false);
     setSaved(false);
+    canvasRef.current?.restart();
   };
 
   return (
@@ -45,7 +68,9 @@ export default function GamePlayerClient({ game }: { game: Game }) {
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
           <div className="hud-stat">
             <div className="l">Jugador</div>
-            <div className="v" style={{ color: "var(--ink)" }}>{name}</div>
+            <div className="v" style={{ color: "var(--ink)" }}>
+              {name}
+            </div>
           </div>
           <div className="hud-stat">
             <div className="l">Puntuación</div>
@@ -61,29 +86,70 @@ export default function GamePlayerClient({ game }: { game: Game }) {
           </div>
         </div>
         <div className="hud-actions">
-          <button className="btn yellow" onClick={() => setPaused((p) => !p)}>
+          <button className="btn yellow" onClick={handlePause}>
             {paused ? "REANUDAR" : "PAUSA"}
           </button>
-          <button className="btn magenta" onClick={endGame}>FIN</button>
-          <button className="btn ghost" onClick={() => router.push(`/games/${game.id}`)}>SALIR</button>
+          <button className="btn magenta" onClick={endGame}>
+            FIN
+          </button>
+          <button
+            className="btn ghost"
+            onClick={() => router.push(`/games/${game.id}`)}
+          >
+            SALIR
+          </button>
         </div>
       </div>
 
       {/* CRT */}
       <div className="crt">
         <div className="crt-screen">
-          <div className="game-arena">
-            <div className="grid-floor" />
-            <div className="enemy e1" />
-            <div className="enemy e2" />
-            <div className="enemy e3" />
-            <div className="player-ship" />
-          </div>
+          {EngineCanvas ? (
+            <Suspense
+              fallback={
+                <div className="crt-content">
+                  <span className="led">CARGANDO…</span>
+                </div>
+              }
+            >
+              <EngineCanvas
+                ref={canvasRef}
+                onScore={setScore}
+                onLives={setLives}
+                onLevel={setLevel}
+                onGameOver={(finalScore: number) => {
+                  setScore(finalScore);
+                  setOver(true);
+                }}
+              />
+            </Suspense>
+          ) : (
+            <div className="game-arena">
+              <div className="grid-floor" />
+              <div className="enemy e1" />
+              <div className="enemy e2" />
+              <div className="enemy e3" />
+              <div className="player-ship" />
+            </div>
+          )}
           {paused && (
-            <div className="crt-content" style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}>
+            <div
+              className="crt-content"
+              style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}
+            >
               <div>
-                <div className="pixel neon-yellow" style={{ fontSize: 22 }}>EN PAUSA</div>
-                <div className="mono" style={{ fontSize: 11, color: "var(--ink-dim)", marginTop: 10, letterSpacing: "0.16em" }}>
+                <div className="pixel neon-yellow" style={{ fontSize: 22 }}>
+                  EN PAUSA
+                </div>
+                <div
+                  className="mono"
+                  style={{
+                    fontSize: 11,
+                    color: "var(--ink-dim)",
+                    marginTop: 10,
+                    letterSpacing: "0.16em",
+                  }}
+                >
                   PULSA REANUDAR PARA CONTINUAR
                 </div>
               </div>
@@ -109,7 +175,9 @@ export default function GamePlayerClient({ game }: { game: Game }) {
               <div className="input-row">
                 <input
                   value={name}
-                  onChange={(e) => setName(e.target.value.toUpperCase().slice(0, 10))}
+                  onChange={(e) =>
+                    setName(e.target.value.toUpperCase().slice(0, 10))
+                  }
                   placeholder="TUS INICIALES"
                 />
                 <button
@@ -127,8 +195,12 @@ export default function GamePlayerClient({ game }: { game: Game }) {
             )}
 
             <div className="actions">
-              <button className="btn" onClick={restart}>JUGAR DE NUEVO</button>
-              <button className="btn magenta" onClick={() => router.push("/")}>VOLVER AL VAULT</button>
+              <button className="btn" onClick={restart}>
+                JUGAR DE NUEVO
+              </button>
+              <button className="btn magenta" onClick={() => router.push("/")}>
+                VOLVER AL VAULT
+              </button>
             </div>
           </div>
         </div>
