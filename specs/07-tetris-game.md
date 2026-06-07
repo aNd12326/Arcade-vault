@@ -1,6 +1,6 @@
 # SPEC 07 — Tetris (canvas + leaderboard)
 
-> **Status:** Approved · **Depende de:** 05-asteroids-canvas, 06-games-table-leaderboard · **Fecha:** 2026-06-06
+> **Status:** Implementado · **Depende de:** 05-asteroids-canvas, 06-games-table-leaderboard · **Fecha:** 2026-06-06
 > **Objetivo:** Integrar Tetris como juego canvas en Arcade Vault con leaderboard anónimo.
 
 ---

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
-import Script from "next/script";
 
 declare global {
   interface Window {
@@ -59,25 +58,28 @@ const AsteroidsCanvas = forwardRef<AsteroidsHandle, Props>(
       window.addEventListener("av:level", handleLevel);
       window.addEventListener("av:gameOver", handleGameOver);
 
+      const script = document.createElement("script");
+      script.src = "/games/asteroids/game.js";
+      document.body.appendChild(script);
+
       return () => {
         window.removeEventListener("av:score", handleScore);
         window.removeEventListener("av:lives", handleLives);
         window.removeEventListener("av:level", handleLevel);
         window.removeEventListener("av:gameOver", handleGameOver);
         window.ASTEROIDS?.pause();
+        delete window.ASTEROIDS;
+        document.body.removeChild(script);
       };
     }, []);
 
     return (
-      <>
-        <canvas
-          id="av-canvas"
-          width={800}
-          height={600}
-          style={{ display: "block", width: "100%", aspectRatio: "800/600" }}
-        />
-        <Script src="/games/asteroids/game.js" strategy="afterInteractive" />
-      </>
+      <canvas
+        id="av-canvas"
+        width={800}
+        height={600}
+        style={{ display: "block", width: "100%", aspectRatio: "800/600" }}
+      />
     );
   }
 );
