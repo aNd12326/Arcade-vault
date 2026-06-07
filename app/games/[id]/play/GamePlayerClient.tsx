@@ -28,6 +28,13 @@ const KEY_MAPS: Record<string, KeyMap> = {
   },
   arkanoid: { left: "ArrowLeft", right: "ArrowRight", a: " " },
   snake: { up: "w", down: "s", left: "a", right: "d" },
+  // Frogger: 4-direction movement only; engine listens on e.code (Arrow* / WASD).
+  frogger: {
+    up: "ArrowUp",
+    down: "ArrowDown",
+    left: "ArrowLeft",
+    right: "ArrowRight",
+  },
 };
 
 export default function GamePlayerClient({ game }: { game: Game }) {
