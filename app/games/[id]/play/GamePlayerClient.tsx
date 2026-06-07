@@ -105,7 +105,11 @@ export default function GamePlayerClient({ game }: { game: Game }) {
           </div>
           <div className="hud-stat lives">
             <div className="l">Vidas</div>
-            <div className="v">{"♥ ".repeat(lives).trim() || "—"}</div>
+            <div className="v">
+              {"♥ "
+                .repeat(Math.max(0, Number.isFinite(lives) ? lives : 0))
+                .trim() || "—"}
+            </div>
           </div>
           <div className="hud-stat level">
             <div className="l">Nivel</div>

@@ -102,6 +102,23 @@ export default function MobileGamepad({
     g?.setSkin?.(name);
   };
 
+  /**
+   * Pointer Events unify mouse + touch in a single, non-passive code path,
+   * so each tap fires press()/release() exactly once. (React registers
+   * onTouchStart as passive, which both errors on preventDefault and lets the
+   * browser fire emulated mouse events — double-firing the key.)
+   * touch-action:none on the button stops scroll/zoom while pressing.
+   */
+  const pointerHandlers = (key: string) => ({
+    onPointerDown: (e: React.PointerEvent) => {
+      e.preventDefault();
+      press(key);
+    },
+    onPointerUp: () => release(key),
+    onPointerLeave: () => release(key),
+    onPointerCancel: () => release(key),
+  });
+
   /** Build the press/release handlers for one mapped key. */
   const dirBtn = (key: string | undefined, glyph: string) => {
     if (!key) return <span />;
@@ -110,17 +127,7 @@ export default function MobileGamepad({
         type="button"
         aria-label={glyph}
         style={padBtn}
-        onTouchStart={(e) => {
-          e.preventDefault();
-          press(key);
-        }}
-        onTouchEnd={(e) => {
-          e.preventDefault();
-          release(key);
-        }}
-        onMouseDown={() => press(key)}
-        onMouseUp={() => release(key)}
-        onMouseLeave={() => release(key)}
+        {...pointerHandlers(key)}
       >
         {glyph}
       </button>
@@ -147,17 +154,7 @@ export default function MobileGamepad({
           fontSize: 22,
           fontWeight: 700,
         }}
-        onTouchStart={(e) => {
-          e.preventDefault();
-          press(key);
-        }}
-        onTouchEnd={(e) => {
-          e.preventDefault();
-          release(key);
-        }}
-        onMouseDown={() => press(key)}
-        onMouseUp={() => release(key)}
-        onMouseLeave={() => release(key)}
+        {...pointerHandlers(key)}
       >
         {glyph}
       </button>
