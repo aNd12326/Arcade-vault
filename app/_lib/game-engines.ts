@@ -24,4 +24,5 @@ export const GAME_ENGINES: Partial<
 > = {
   asteroids: lazy(() => import("../_games/asteroids/AsteroidsCanvas")),
   tetris: lazy(() => import("../_games/tetris/TetrisCanvas")),
+  arkanoid: lazy(() => import("../_games/arkanoid/ArkanoidCanvas")),
 };
