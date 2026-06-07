@@ -20,10 +20,26 @@ export type ScoreRow = {
 export const CATS = ["TODOS", "ARCADE", "PUZZLE", "SHOOTER", "VERSUS"] as const;
 
 export const PLAYERS = [
-  "XARK", "NEON_V", "BLITZ", "PRISM", "DARKSTAR",
-  "RAVEN", "VOLT", "CIPHER", "SPECTER", "FUSE",
-  "ORBIT", "GLITCH", "NOVA", "PHASE", "AXIOM",
-  "PIXEL", "SURGE", "ECHO", "DRIFT", "FLARE",
+  "XARK",
+  "NEON_V",
+  "BLITZ",
+  "PRISM",
+  "DARKSTAR",
+  "RAVEN",
+  "VOLT",
+  "CIPHER",
+  "SPECTER",
+  "FUSE",
+  "ORBIT",
+  "GLITCH",
+  "NOVA",
+  "PHASE",
+  "AXIOM",
+  "PIXEL",
+  "SURGE",
+  "ECHO",
+  "DRIFT",
+  "FLARE",
 ];
 
 export const GAMES: Game[] = [
@@ -83,6 +99,17 @@ export const GAMES: Game[] = [
     plays: "31.1K",
   },
   {
+    id: "asteroids",
+    title: "ASTEROIDS",
+    short: "Destruye asteroides y sobrevive el mayor tiempo posible.",
+    long: "Nave espacial en un campo toroidal de asteroides. Los grandes se parten en medianos, los medianos en pequeños. 3 vidas, power-ups y estrella fugaz. ¿Cuánto aguantas?",
+    cat: "SHOOTER",
+    cover: "cover-rocas",
+    color: "cyan",
+    best: 267300,
+    plays: "15.6K",
+  },
+  {
     id: "campo-de-rocas",
     title: "CAMPO DE ROCAS",
     short: "Navega el campo de asteroides sin ser destruido.",
@@ -126,7 +153,7 @@ export function seededScores(seed: number, count: number): ScoreRow[] {
   };
   const baseScore = 50000 + (seed % 300000);
   for (let i = 0; i < count; i++) {
-    const score = Math.max(1000, baseScore - i * (next() % 4000 + 1500));
+    const score = Math.max(1000, baseScore - i * ((next() % 4000) + 1500));
     const playerIdx = next() % PLAYERS.length;
     const day = (next() % 28) + 1;
     const month = (next() % 6) + 1;
