@@ -65,26 +65,24 @@ export default function AuthPage() {
         return;
       }
 
-      const { data: taken } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("nickname", nick)
-        .maybeSingle();
-      if (taken) {
-        setError("Ese nickname ya está tomado.");
+      // Signup vía ruta propia → rate-limit por IP en proxy.ts (SPEC 14).
+      const res = await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password: pass,
+          nickname: nick,
+          origin: window.location.origin,
+        }),
+      });
+      if (res.status === 429) {
+        setError("Demasiados intentos. Inténtalo más tarde.");
         return;
       }
-
-      const { error } = await supabase.auth.signUp({
-        email,
-        password: pass,
-        options: {
-          data: { nickname: nick },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      if (error) {
-        setError(error.message);
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setError(data.error ?? "No se pudo crear la cuenta.");
         return;
       }
       setCheckEmail(true);
