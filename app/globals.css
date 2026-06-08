@@ -764,6 +764,34 @@ a {
   filter: drop-shadow(0 0 6px rgba(0, 255, 136, 0.6));
 }
 
+.cover-frogger {
+  background: linear-gradient(
+    180deg,
+    #0a1f3a 0 45%,
+    #141417 45% 80%,
+    #16331f 80%
+  );
+}
+.cover-frogger::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    /* logs on the river */
+    linear-gradient(90deg, #6b3f1d 0 70px, transparent 70px) 15% 22% / 120px
+      14px no-repeat,
+    linear-gradient(90deg, #6b3f1d 0 50px, transparent 50px) 70% 34% / 80px 14px
+      no-repeat,
+    /* cars on the road */
+    linear-gradient(90deg, var(--magenta) 0 34px, transparent 34px) 25% 60% /
+      40px 12px no-repeat,
+    linear-gradient(90deg, var(--yellow) 0 34px, transparent 34px) 65% 68% /
+      40px 12px no-repeat,
+    /* the frog */
+    radial-gradient(circle at 50% 88%, var(--green) 0 9px, transparent 10px);
+  filter: drop-shadow(0 0 6px rgba(0, 255, 136, 0.6));
+}
+
 .cover-glot {
   background: radial-gradient(circle at 50% 50%, #1a002a, #0a0a18);
 }

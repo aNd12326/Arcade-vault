@@ -134,6 +134,26 @@
   const nextCtx = nextCanvas.getContext("2d");
   const skinSelect = document.getElementById("skin-select");
 
+  // Low-fx en móvil (SPEC 11): desactiva el glow (shadowBlur) bajo 768 px.
+  function lowFx() {
+    return window.innerWidth < 768;
+  }
+
+  // ---- FPS overlay (dev-only, SPEC 11) ----
+  let fpsMeter = null;
+  (function loadFps() {
+    const mk = () => {
+      if (window.AVFps) fpsMeter = window.AVFps.create();
+    };
+    if (window.AVFps) mk();
+    else {
+      const s = document.createElement("script");
+      s.src = "/games/_shared/fps.js";
+      s.onload = mk;
+      document.head.appendChild(s);
+    }
+  })();
+
   let board, current, next, score, lines, level, combo, maxCombo;
   let paused, gameOver, lastTime, dropAccum, dropInterval, animId;
   let startLevel = 1;
@@ -289,7 +309,7 @@
 
     switch (skin.style) {
       case "neon": {
-        context.shadowBlur = 14;
+        context.shadowBlur = lowFx() ? 0 : 14;
         context.shadowColor = color;
         context.fillStyle = color;
         context.fillRect(px, py, s, s);
@@ -436,6 +456,10 @@
       }
     }
     draw();
+    if (fpsMeter) {
+      fpsMeter.tick(ts);
+      fpsMeter.draw(ctx);
+    }
     animId = requestAnimationFrame(loop);
   }
 

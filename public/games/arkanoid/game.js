@@ -5,6 +5,21 @@
   const W = canvas.width;
   const H = canvas.height;
 
+  // ── FPS overlay (dev-only, SPEC 11) ──
+  let fpsMeter = null;
+  (function loadFps() {
+    const mk = () => {
+      if (window.AVFps) fpsMeter = window.AVFps.create();
+    };
+    if (window.AVFps) mk();
+    else {
+      const s = document.createElement("script");
+      s.src = "/games/_shared/fps.js";
+      s.onload = mk;
+      document.head.appendChild(s);
+    }
+  })();
+
   // --- Rejilla ---
   const BLOCK_W = 72;
   const BLOCK_H = 36;
@@ -146,6 +161,16 @@
   // --- Bloques ---
   let blocks = [];
 
+  // Offscreen cache del campo de bloques (SPEC 11): los bloques no se mueven
+  // entre roturas, así que se dibujan UNA vez al layer y se blitean cada frame
+  // con drawImage. drawBlock (con su shadowBlur del skin neón) deja de correr
+  // por-bloque por-frame; solo al invalidar (build / rotura / cambio de skin).
+  const blockLayer = document.createElement("canvas");
+  blockLayer.width = W;
+  blockLayer.height = H;
+  const layerCtx = blockLayer.getContext("2d");
+  let blocksDirty = true;
+
   // --- Explosiones activas (visual, sin colisión) ---
   let explosions = [];
 
@@ -168,45 +193,60 @@
         });
       }
     }
+    blocksDirty = true; // nuevo campo de bloques → re-render del layer
   }
 
   // --- Drawing helpers ---
 
-  function drawBlock(b) {
+  // Dibuja un bloque en el contexto `g` (por defecto el layer offscreen). El
+  // shadowBlur del skin neón vive aquí, pero solo se ejecuta al re-renderizar el
+  // layer (rotura / build / skin), no por-frame.
+  function drawBlock(b, g) {
     const color = skin.rowColors[b.color] || "#888888";
     const x = b.x,
       y = b.y,
       w = b.w,
       h = b.h;
 
-    ctx.save();
+    g.save();
     if (skin.style === "neon") {
-      ctx.shadowBlur = 12;
-      ctx.shadowColor = color;
-      ctx.fillStyle = color;
-      ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = "rgba(0,0,0,0.45)";
-      ctx.fillRect(x + 5, y + 4, w - 10, h - 8);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+      g.shadowBlur = 12;
+      g.shadowColor = color;
+      g.fillStyle = color;
+      g.fillRect(x + 1, y + 1, w - 2, h - 2);
+      g.shadowBlur = 0;
+      g.fillStyle = "rgba(0,0,0,0.45)";
+      g.fillRect(x + 5, y + 4, w - 10, h - 8);
+      g.strokeStyle = color;
+      g.lineWidth = 1.5;
+      g.strokeRect(x + 1, y + 1, w - 2, h - 2);
     } else if (skin.style === "flat") {
       // retro: solid color + subtle top highlight, no glow
-      ctx.fillStyle = color;
-      ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
-      ctx.fillStyle = "rgba(255,255,255,0.14)";
-      ctx.fillRect(x + 1, y + 1, w - 2, 4);
+      g.fillStyle = color;
+      g.fillRect(x + 1, y + 1, w - 2, h - 2);
+      g.fillStyle = "rgba(255,255,255,0.14)";
+      g.fillRect(x + 1, y + 1, w - 2, 4);
     } else {
       // clasico: NES-style with bright top edge and dark bottom edge
-      ctx.fillStyle = color;
-      ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
-      ctx.fillStyle = "rgba(255,255,255,0.30)";
-      ctx.fillRect(x + 1, y + 1, w - 2, 4);
-      ctx.fillStyle = "rgba(0,0,0,0.25)";
-      ctx.fillRect(x + 1, y + h - 5, w - 2, 4);
+      g.fillStyle = color;
+      g.fillRect(x + 1, y + 1, w - 2, h - 2);
+      g.fillStyle = "rgba(255,255,255,0.30)";
+      g.fillRect(x + 1, y + 1, w - 2, 4);
+      g.fillStyle = "rgba(0,0,0,0.25)";
+      g.fillRect(x + 1, y + h - 5, w - 2, 4);
     }
-    ctx.restore();
+    g.restore();
+  }
+
+  // Re-renderiza el layer offscreen con los bloques vivos. Llamar solo al
+  // invalidar (blocksDirty).
+  function renderBlockLayer() {
+    layerCtx.clearRect(0, 0, W, H);
+    for (const b of blocks) {
+      if (!b.alive) continue;
+      drawBlock(b, layerCtx);
+    }
+    blocksDirty = false;
   }
 
   function drawPaddle() {
@@ -254,6 +294,7 @@
     if (!SKINS[name]) name = "clasico";
     currentSkinName = name;
     skin = SKINS[name];
+    blocksDirty = true; // colores/estilo cambian → re-render del layer
     try {
       localStorage.setItem(SKIN_KEY, name);
     } catch (e) {}
@@ -431,6 +472,7 @@
         ball.y <= b.y + b.h
       ) {
         b.alive = false;
+        blocksDirty = true; // bloque roto → re-render del layer offscreen
         game.score += 10;
         window.dispatchEvent(
           new CustomEvent("av:score", { detail: { score: game.score } })
@@ -464,10 +506,8 @@
     ctx.fillStyle = skin.boardBg;
     ctx.fillRect(0, 0, W, H);
 
-    for (const b of blocks) {
-      if (!b.alive) continue;
-      drawBlock(b);
-    }
+    if (blocksDirty) renderBlockLayer();
+    ctx.drawImage(blockLayer, 0, 0);
 
     for (const e of explosions) {
       const frame = Math.min(
@@ -517,6 +557,10 @@
   function loop(now) {
     update(now);
     draw(now);
+    if (fpsMeter) {
+      fpsMeter.tick(now);
+      fpsMeter.draw(ctx);
+    }
     rafId = requestAnimationFrame(loop);
   }
 
@@ -535,6 +579,7 @@
     },
     restart() {
       gamePaused = false;
+      cancelAnimationFrame(rafId); // kill any in-flight loop before re-scheduling
       resetGame();
       rafId = requestAnimationFrame(loop);
     },

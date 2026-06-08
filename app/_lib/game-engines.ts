@@ -26,4 +26,5 @@ export const GAME_ENGINES: Partial<
   tetris: lazy(() => import("../_games/tetris/TetrisCanvas")),
   arkanoid: lazy(() => import("../_games/arkanoid/ArkanoidCanvas")),
   snake: lazy(() => import("../_games/snake/SnakeCanvas")),
+  frogger: lazy(() => import("../_games/frogger/FroggerCanvas")),
 };

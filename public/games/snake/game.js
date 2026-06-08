@@ -2,6 +2,26 @@
   const canvas = document.getElementById("av-canvas");
   const ctx = canvas.getContext("2d");
 
+  // Low-fx en móvil (SPEC 11): desactiva el glow (shadowBlur) bajo 768 px.
+  function lowFx() {
+    return window.innerWidth < 768;
+  }
+
+  // ---- FPS overlay (dev-only, SPEC 11) ----
+  let fpsMeter = null;
+  (function loadFps() {
+    const mk = () => {
+      if (window.AVFps) fpsMeter = window.AVFps.create();
+    };
+    if (window.AVFps) mk();
+    else {
+      const s = document.createElement("script");
+      s.src = "/games/_shared/fps.js";
+      s.onload = mk;
+      document.head.appendChild(s);
+    }
+  })();
+
   const CELL = 32;
   const COLS = 25;
   const ROWS = 25;
@@ -184,7 +204,7 @@
     ctx.save();
     switch (skin.style) {
       case "neon": {
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = lowFx() ? 0 : 12;
         ctx.shadowColor = color;
         ctx.fillStyle = color;
         ctx.fillRect(px, py, s, s);
@@ -243,7 +263,7 @@
     // solid circle fallback — always visible regardless of sprite
     if (skin.style === "neon") {
       ctx.save();
-      ctx.shadowBlur = 16;
+      ctx.shadowBlur = lowFx() ? 0 : 16;
       ctx.shadowColor = skin.fruitBg;
       ctx.fillStyle = skin.fruitBg;
       ctx.beginPath();
@@ -308,6 +328,10 @@
       }
     }
     draw();
+    if (fpsMeter) {
+      fpsMeter.tick(ts);
+      fpsMeter.draw(ctx);
+    }
     rafId = requestAnimationFrame(loop);
   }
 
