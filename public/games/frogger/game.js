@@ -6,6 +6,28 @@
 (function () {
   "use strict";
 
+  // Low-fx en móvil (SPEC 11): desactiva el glow (shadowBlur) bajo 768 px. El
+  // resto del estilo neón (colores, strokes) se mantiene; solo cae el blur
+  // gaussiano por-frame, que es el coste dominante.
+  function lowFx() {
+    return window.innerWidth < 768;
+  }
+
+  // ---- FPS overlay (dev-only, SPEC 11) ------------------------------------
+  let fpsMeter = null;
+  (function loadFps() {
+    const mk = () => {
+      if (window.AVFps) fpsMeter = window.AVFps.create();
+    };
+    if (window.AVFps) mk();
+    else {
+      const s = document.createElement("script");
+      s.src = "/games/_shared/fps.js";
+      s.onload = mk;
+      document.head.appendChild(s);
+    }
+  })();
+
   // ---- Grid / geometry ----------------------------------------------------
   const COLS = 16;
   const ROWS = 14;
@@ -554,7 +576,7 @@
       const color = skin.carColors[(e.col | 0) % 3];
       ctx.fillStyle = color;
       if (isNeon) {
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = lowFx() ? 0 : 12;
         ctx.shadowColor = color;
       }
       roundRect(x + 3, y + 7, w - 6, CELL - 14, 6);
@@ -572,7 +594,7 @@
     } else if (e.type === "truck") {
       ctx.fillStyle = skin.truckBody;
       if (isNeon) {
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = lowFx() ? 0 : 10;
         ctx.shadowColor = skin.truckBody;
       }
       roundRect(x + 3, y + 6, w - 6, CELL - 12, 4);
@@ -586,7 +608,7 @@
     } else if (e.type === "log") {
       ctx.fillStyle = skin.logFill;
       if (isNeon) {
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = lowFx() ? 0 : 8;
         ctx.shadowColor = skin.logFill;
       }
       roundRect(x + 1, y + 6, w - 2, CELL - 12, 10);
@@ -612,7 +634,7 @@
           ctx.stroke();
         } else {
           if (isNeon) {
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = lowFx() ? 0 : 10;
             ctx.shadowColor = skin.turtleBody;
           }
           ctx.fillStyle = skin.turtleBody;
@@ -636,7 +658,7 @@
       ctx.strokeStyle = skin.goalBorder;
       ctx.lineWidth = 2;
       if (isNeon) {
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = lowFx() ? 0 : 8;
         ctx.shadowColor = skin.goalBorder;
       }
       ctx.strokeRect(x + 2, ROW_GOALS * CELL + 2, w - 4, CELL - 4);
@@ -644,7 +666,7 @@
 
       if (goalsFilled[i]) {
         if (isNeon) {
-          ctx.shadowBlur = 14;
+          ctx.shadowBlur = lowFx() ? 0 : 14;
           ctx.shadowColor = skin.goalFilledDot;
         }
         ctx.fillStyle = skin.goalFilledDot;
@@ -662,7 +684,7 @@
     // Legs splay during a hop.
     ctx.fillStyle = skin.frogLeg;
     if (isNeon) {
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = lowFx() ? 0 : 10;
       ctx.shadowColor = skin.frogBody;
     }
     const legOut = animating ? 7 : 3;
@@ -702,7 +724,7 @@
     // Lives top-right (one frog dot per life).
     for (let i = 0; i < lives; i++) {
       if (isNeon) {
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = lowFx() ? 0 : 8;
         ctx.shadowColor = skin.hudFrogDot;
       }
       ctx.fillStyle = skin.hudFrogDot;
@@ -715,7 +737,7 @@
     const barColor =
       frac > 0.5 ? skin.timeHigh : frac > 0.25 ? skin.timeMid : skin.timeLow;
     if (isNeon) {
-      ctx.shadowBlur = 6;
+      ctx.shadowBlur = lowFx() ? 0 : 6;
       ctx.shadowColor = barColor;
     }
     ctx.fillStyle = barColor;
@@ -840,13 +862,23 @@
     respawnFrog();
   }
 
+  // Schedule the loop only if no frame is already queued → idempotent.
+  function schedule() {
+    if (rafId === null) rafId = requestAnimationFrame(frame);
+  }
+
   function frame(ts) {
-    if (!running) return;
+    rafId = null;
+    if (!running || paused) return; // paused/stopped: no re-schedule
     const dt = Math.min(64, ts - lastTs || 16);
     lastTs = ts;
-    if (!paused) update(dt);
+    update(dt);
     draw();
     syncHud();
+    if (fpsMeter) {
+      fpsMeter.tick(ts);
+      fpsMeter.draw(ctx);
+    }
     rafId = requestAnimationFrame(frame);
   }
 
@@ -858,7 +890,7 @@
     reset();
     running = true;
     lastTs = 0;
-    rafId = requestAnimationFrame(frame);
+    schedule();
   }
 
   function reset() {
@@ -906,18 +938,24 @@
   window.FROGGER = {
     pause() {
       paused = true;
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
     },
     resume() {
-      paused = false;
+      if (paused && running) {
+        paused = false;
+        lastTs = 0;
+        schedule();
+      }
     },
     restart() {
       reset();
       paused = false;
-      if (!running) {
-        running = true;
-        lastTs = 0;
-        rafId = requestAnimationFrame(frame);
-      }
+      running = true;
+      lastTs = 0;
+      schedule();
     },
     setSkin(name) {
       applySkin(name);

@@ -6,6 +6,28 @@
   const W = 800;
   const H = 600;
 
+  // Low-fx en móvil (SPEC 11): desactiva shadowBlur bajo 768 px, donde el glow
+  // gaussiano por-frame es el coste dominante y el viewport pequeño lo hace
+  // prescindible para la legibilidad. El glow se mantiene en escritorio.
+  function lowFx() {
+    return window.innerWidth < 768;
+  }
+
+  // ── FPS overlay (dev-only, SPEC 11) ──
+  let fpsMeter = null;
+  (function loadFps() {
+    const mk = () => {
+      if (window.AVFps) fpsMeter = window.AVFps.create();
+    };
+    if (window.AVFps) mk();
+    else {
+      const s = document.createElement("script");
+      s.src = "/games/_shared/fps.js";
+      s.onload = mk;
+      document.head.appendChild(s);
+    }
+  })();
+
   // ── Visual skins ──────────────────────────────────────────────────────────────
   const SKINS = {
     clasico: {
@@ -134,7 +156,7 @@
 
     draw() {
       ctx.save();
-      if (skin.shadowBlur > 0) {
+      if (skin.shadowBlur > 0 && !lowFx()) {
         ctx.shadowBlur = skin.shadowBlur * 0.6;
         ctx.shadowColor = skin.bulletColor;
       }
@@ -193,7 +215,7 @@
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.rot);
-      if (skin.shadowBlur > 0) {
+      if (skin.shadowBlur > 0 && !lowFx()) {
         ctx.shadowBlur = skin.shadowBlur;
         ctx.shadowColor = skin.asteroidColor;
       }
@@ -270,7 +292,7 @@
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.angle);
-      if (skin.shadowBlur > 0) {
+      if (skin.shadowBlur > 0 && !lowFx()) {
         ctx.shadowBlur = skin.shadowBlur;
         ctx.shadowColor = skin.shadowColor;
       }
@@ -466,7 +488,7 @@
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(-Math.PI / 2);
-    if (skin.shadowBlur > 0) {
+    if (skin.shadowBlur > 0 && !lowFx()) {
       ctx.shadowBlur = skin.shadowBlur * 0.5;
       ctx.shadowColor = skin.lifeColor;
     }
@@ -485,7 +507,7 @@
 
   function drawHUD() {
     ctx.save();
-    if (skin.shadowBlur > 0) {
+    if (skin.shadowBlur > 0 && !lowFx()) {
       ctx.shadowBlur = skin.shadowBlur * 0.5;
       ctx.shadowColor = skin.hudColor;
     }
@@ -516,30 +538,47 @@
 
   // ── Loop principal ────────────────────────────────────────────────────────────
   let lastTime = null;
+  let rafId = null; // single in-flight requestAnimationFrame handle
+
+  // Schedule the loop only if no frame is already queued → idempotent: callers
+  // can't stack duplicate loops by pausing/resuming or restarting repeatedly.
+  function schedule() {
+    if (rafId === null) rafId = requestAnimationFrame(loop);
+  }
 
   function loop(ts) {
+    rafId = null;
     if (paused || state === "gameover") {
       loopRunning = false;
-      return;
+      return; // do NOT re-schedule while paused/over
     }
     loopRunning = true;
     const dt = lastTime === null ? 0 : Math.min((ts - lastTime) / 1000, 0.05);
     lastTime = ts;
     update(dt);
     draw();
-    requestAnimationFrame(loop);
+    if (fpsMeter) {
+      fpsMeter.tick(ts);
+      fpsMeter.draw(ctx);
+    }
+    rafId = requestAnimationFrame(loop);
   }
 
   // ── API de control expuesta a React ──────────────────────────────────────────
   function pause() {
     paused = true;
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    loopRunning = false;
   }
 
   function resume() {
     if (paused && state !== "gameover") {
       paused = false;
       lastTime = null;
-      requestAnimationFrame(loop);
+      schedule();
     }
   }
 
@@ -547,14 +586,12 @@
     paused = false;
     lastTime = null;
     initGame();
-    if (!loopRunning) {
-      requestAnimationFrame(loop);
-    }
+    schedule();
   }
 
   applySkin(currentSkinName);
   initGame();
-  requestAnimationFrame(loop);
+  schedule();
 
   window.ASTEROIDS = {
     pause,
