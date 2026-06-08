@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "../_lib/user-context";
 import { createClient } from "../_lib/supabase/client";
+import { isStrongPassword, PASSWORD_HINT } from "../_lib/password";
 
 type Tab = "in" | "up";
 
@@ -53,6 +54,11 @@ export default function AuthPage() {
       }
 
       // Registro
+      if (!isStrongPassword(pass)) {
+        setError(PASSWORD_HINT);
+        return;
+      }
+
       const nick = nickname.trim();
       if (nick.length < 1 || nick.length > 20) {
         setError("El nickname debe tener entre 1 y 20 caracteres.");
@@ -191,6 +197,20 @@ export default function AuthPage() {
                 onChange={(e) => setPass(e.target.value)}
                 placeholder="••••••••"
               />
+              {tab === "up" && (
+                <div
+                  className="mono"
+                  style={{
+                    fontSize: 10,
+                    color: "var(--ink-faint)",
+                    letterSpacing: "0.04em",
+                    marginTop: 6,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {PASSWORD_HINT}
+                </div>
+              )}
             </div>
 
             {tab === "in" && (
