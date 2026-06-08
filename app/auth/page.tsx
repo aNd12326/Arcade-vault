@@ -87,6 +87,15 @@ export default function AuthPage() {
     router.push("/");
   };
 
+  const oauth = async (provider: "google" | "github") => {
+    setError(null);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) setError(error.message);
+  };
+
   return (
     <div className="av-auth-wrap fade-in">
       <div className="auth-card">
@@ -237,10 +246,18 @@ export default function AuthPage() {
         <div className="auth-divider">O CONTINÚA CON</div>
 
         <div className="social">
-          <button className="btn ghost" type="button">
+          <button
+            className="btn ghost"
+            type="button"
+            onClick={() => oauth("google")}
+          >
             ◆ GOOGLE
           </button>
-          <button className="btn ghost" type="button">
+          <button
+            className="btn ghost"
+            type="button"
+            onClick={() => oauth("github")}
+          >
             ▣ GITHUB
           </button>
         </div>
