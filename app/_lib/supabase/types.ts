@@ -16,3 +16,9 @@ export type Score = {
   score: number;
   created_at: string;
 };
+
+export type Profile = {
+  id: string;
+  nickname: string;
+  created_at: string;
+};

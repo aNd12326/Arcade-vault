@@ -1,5 +1,5 @@
 import { createClient } from "./server";
-import type { Game, Score } from "./types";
+import type { Game, Score, Profile } from "./types";
 
 export async function getGames(): Promise<Game[]> {
   const supabase = await createClient();
@@ -47,4 +47,26 @@ export async function insertScore(
     .from("scores")
     .insert({ game_id: gameId, nickname, score });
   if (error) throw new Error(error.message);
+}
+
+export async function getProfile(userId: string): Promise<Profile | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .single();
+  if (error) return null;
+  return data;
+}
+
+export async function isNicknameTaken(nickname: string): Promise<boolean> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("nickname", nickname)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data !== null;
 }

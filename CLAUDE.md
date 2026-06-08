@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What is Arcade Vault
 
-Retro arcade platform: a library of canvas games, each with an anonymous global leaderboard backed by Supabase. Games run as plain `<canvas>` + vanilla JS engines loaded into React client components. Currently shipped: **Asteroids**, **Tetris**, **Arkanoid**, **Snake** — may be more; see `references/implemented-games.md` for the full up-to-date list (ID, título, categoría, color, descripción).
+Retro arcade platform: a library of canvas games, each with an anonymous global leaderboard backed by Supabase. Games run as plain `<canvas>` + vanilla JS engines loaded into React client components. Currently shipped: **Asteroids**, **Tetris**, **Arkanoid**, **Snake**, **Frogger** — may be more; see `references/implemented-games.md` for the full up-to-date list (ID, título, categoría, color, descripción).
 
 ## Commands
 
@@ -24,13 +24,17 @@ npx next typegen # generate PageProps/LayoutProps/RouteContext helpers
 - **`/frontend-design`** — siempre úsalo para diseñar la interfaz de usuario.
 - **`/add-game`** — genera un spec (`specs/NN-<slug>-game.md`) para añadir un nuevo juego canvas. Acepta una carpeta de `references/started-games/` (ej: `03-tetris`) o una descripción libre. Solo produce el spec; no escribe código. Implementar después con `/spec-impl NN-<slug>-game`.
 - **`/spec`, `/spec-impl`** — flujo spec-driven maestro (en `.agents/skills/`). Todo juego/feature pasa por un spec en `specs/` antes de implementarse.
+- **`/spec-impl-game`** — implementa un spec de juego aprobado (mismo flujo que `/spec-impl`) y luego ejecuta el pipeline post-juego de forma secuencial: `skin-designer` → `mobile-porter` sobre el juego implementado.
 
 ## Agents
 
-- **`game-planner`** (`.claude/agents/game-planner.md`) — subagente que decide el **siguiente** juego a añadir. Lee `references/implemented-games.md` y `references/game-suggestions-todo.md` (su memoria en disco) para no repetir sugerencias, aplica el rubro de encaje con la plataforma (canvas + vanilla JS, score numérico, contrato `av:*`, categoría/color), recomienda UN juego, registra la fila en `references/game-suggestions-todo.md` y deriva a `/add-game`. No escribe spec ni código. Flujo: `game-planner` → `/add-game` → `/spec-impl`.
-- **`game-jam`** (`.claude/agents/game-jam.md`) — subagente que, dado un **tema**, diseña UN juego arcade nuevo y genera **≥2 specs completos** en `specs/game-jam/<game-id>/`: `01-<game-id>-core.md` (plataforma core + integración Supabase) y `02-<game-id>-<feature>.md` (feature complementaria de alcance distinto). Sigue el formato de `specs/07-09` y el contrato de props (`paused`, `onScoreChange/onLivesChange/onLevelChange/onGameOver`). No escribe código. Flujo: `game-jam` (tema → specs) → revisar → `/spec-impl`.
-- **`skin-designer`** (`.claude/agents/skin-designer.md`) — subagente que aplica los **3 skins canónicos** (`clasico` default, `retro`, `neon`) a UN juego concreto indicado por el usuario. Trabaja un juego a la vez (no audita ni toca otros), **escribe código directamente** sobre `public/games/<id>/game.js` (objeto `SKINS` + `window.<ID>.setSkin/getSkins`) y `app/_games/<id>/<PascalId>Canvas.tsx` (`<select>` + persistencia localStorage), siguiendo el patrón de Tetris. Registra el progreso en `references/game-with-themes.md` (su memoria). Cada skin debe lucir bien sobre el fondo oscuro fijo (`--bg: #0a0a0f`). Úsalo cuando el usuario diga "aplica skins a <juego>", "diseña los skins de <juego>" o similar.
-- **`game-performance-booster`** (`.claude/agents/game-performance-booster.md`) — subagente que audita y corrige el performance de UN juego canvas indicado por su ID, aplicando los fixes del **spec 11** (`specs/11-game-performance.md`): overlay FPS dev-only (`_shared/fps.js`), ciclo de vida idempotente de `requestAnimationFrame` (`rafId`/`schedule()`/`pause` cancela/`restart` cancela antes de agendar) y eliminación del `shadowBlur` por-frame (cache offscreen del campo estático + ruta low-fx `<768px`). Trabaja un juego a la vez (no toca otros ni los wrappers React), **escribe código directamente** solo sobre `public/games/<id>/game.js`, siguiendo el patrón de Asteroids/Arkanoid. Úsalo cuando el usuario diga "revisa el performance de <juego>", "optimiza <juego>" o similar.
+- **`game-planner`** (`.claude/agents/game-planner.md`) — decide el **siguiente** juego a añadir; lo registra en `references/game-suggestions-todo.md` y deriva a `/add-game`.
+- **`game-jam`** (`.claude/agents/game-jam.md`) — dado un **tema**, diseña un juego nuevo y genera **≥2 specs** en `specs/game-jam/<id>/`.
+- **`skin-designer`** (`.claude/agents/skin-designer.md`) — aplica los **3 skins canónicos** (`clasico`/`retro`/`neon`) a UN juego; registra avance en `references/game-with-themes.md`.
+- **`mobile-porter`** (`.claude/agents/mobile-porter.md`) — cabla los controles táctiles `MobileGamepad` (spec 10) en la play-page de UN juego.
+- **`game-performance-booster`** (`.claude/agents/game-performance-booster.md`) — aplica los fixes de performance del **spec 11** (overlay FPS, `rAF` idempotente, sin `shadowBlur` por-frame) sobre el `game.js` de UN juego.
+
+Detalle completo de cada subagente en su archivo de definición. Flujo canónico: `game-planner` → `/add-game` → `/spec-impl-game` (→ `skin-designer` → `mobile-porter`).
 
 ## Stack
 
@@ -101,12 +105,14 @@ app/
   api/scores/route.ts           # POST score (validates nickname 1–20, score ≥ 0 int)
   api/contact/route.ts          # contact form
   _components/Nav.tsx
+  _components/MobileGamepad.tsx  # reusable touch controls (spec 10)
   _lib/
     game-engines.ts             # registry: id → lazy() canvas component
     user-context.tsx
     supabase/{client,server,queries,types}.ts
   _games/<id>/<PascalId>Canvas.tsx   # React wrapper per game
 public/games/<id>/game.js       # vanilla JS engine + assets/
+public/games/_shared/fps.js     # dev-only FPS overlay (spec 11)
 specs/NN-<slug>.md              # spec-driven docs, one per feature/game
 references/started-games/       # source engines fed to /add-game (02-asteroids, 03-tetris, 04-arkanoid)
 ```
