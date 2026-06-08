@@ -60,19 +60,55 @@ create policy "profiles_update_own" on public.profiles
 ```sql
 create function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = '' as $$
+declare
+  provided text := nullif(trim(new.raw_user_meta_data ->> 'nickname'), '');
+  base text;
+  candidate text;
+  n int := 0;
 begin
-  insert into public.profiles (id, nickname)
-  values (new.id, new.raw_user_meta_data ->> 'nickname');
+  -- Registro email/password: el nickname viaja en metadata (pre-validado en
+  -- cliente). Se inserta tal cual; la constraint UNIQUE es el guard final.
+  if provided is not null then
+    insert into public.profiles (id, nickname) values (new.id, left(provided, 20));
+    return new;
+  end if;
+
+  -- OAuth (Google/GitHub) no manda nickname: se usa el nombre de la cuenta
+  -- (full_name / name / user_name), con fallback a la parte local del email,
+  -- y se de-duplica con sufijo numérico si ya existe.
+  base := coalesce(
+    nullif(trim(new.raw_user_meta_data ->> 'full_name'), ''),
+    nullif(trim(new.raw_user_meta_data ->> 'name'), ''),
+    nullif(trim(new.raw_user_meta_data ->> 'user_name'), ''),
+    nullif(split_part(coalesce(new.email, ''), '@', 1), ''),
+    'player'
+  );
+  base := left(regexp_replace(base, '\s+', '_', 'g'), 20);
+  if base is null or base = '' then base := 'player'; end if;
+
+  candidate := base;
+  while exists (select 1 from public.profiles where nickname = candidate) loop
+    n := n + 1;
+    candidate := left(base, 16) || '_' || n::text;
+  end loop;
+
+  insert into public.profiles (id, nickname) values (new.id, candidate);
   return new;
 end;
 $$;
+
+revoke execute on function public.handle_new_user() from anon, authenticated, public;
 
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 ```
 
-El nickname viaja en el registro vía `signUp({ email, password, options: { data: { nickname } } })`.
+- **Email/password:** el nickname viaja en el registro vía `signUp({ email,
+password, options: { data: { nickname } } })`.
+- **OAuth:** no hay formulario de nickname, así que el trigger toma el nombre de
+  la cuenta del provider como nickname (de-duplicado). El usuario queda con un
+  nickname utilizable de inmediato; editarlo después queda fuera de este spec.
 
 ### Tipo TypeScript (`types.ts`)
 
@@ -149,7 +185,7 @@ Convenciones:
 - **Sí:** Confirmación de email obligatoria. Default seguro de Supabase; reduce registros basura.
 - **Sí:** `proxy.ts` (no `middleware.ts`). Next 16 deprecó middleware; el refresco de sesión SSR lo necesita.
 - **Sí:** Mantener "jugar como invitado" + reescribir `user-context` para que `user.name` siga siendo el campo que consume `Nav`. Cero churn en componentes que ya usan el contexto.
-- **No:** Vincular `scores.user_id` a la cuenta. Los scores siguen como nickname de texto libre; el nickname se autocompleta del perfil. Migrar el esquema de scores es otro spec.
+- **No:** Vincular `scores.user_id` a la cuenta. Los scores siguen como nickname de texto libre; el nickname se autocompleta del perfil. Migrar el esquema de scores es otro spec. → **Implementado en SPEC 13.**
 - **No:** Rutas protegidas / login obligatorio para jugar. Rompería el flujo invitado; va en otro spec si llega.
 - **Sí:** Página única `/auth` con tabs + `/auth/callback` + `/auth/reset`. Menos churn que partir en `/login` y `/register`.
 - **Sí:** Incluir flujo de recuperación de contraseña. Pedido explícito.
@@ -172,10 +208,31 @@ Convenciones:
 
 ## Lo que **no** está en este spec
 
-- Vincular scores a la cuenta (`scores.user_id`).
+- Vincular scores a la cuenta (`scores.user_id`). → **Implementado en SPEC 13.**
 - Login obligatorio / rutas protegidas para jugar.
-- Edición de perfil (cambiar nickname, avatar).
+- Edición de perfil (cambiar nickname, avatar). → Avatar (solo lectura) + navbar en **SPEC 13**; edición sigue fuera.
 - Configurar los providers OAuth en el dashboard (manual).
 - Tests automatizados.
 
 Cada uno, si llega, va en su propio spec.
+
+---
+
+## Configuración manual de OAuth (prerequisito, no es código)
+
+Los botones Google/GitHub llaman a `signInWithOAuth` con `redirectTo
+=<origin>/auth/callback`. Para que funcionen en runtime hay que habilitar los
+providers en el dashboard de Supabase (Authentication → Providers):
+
+1. **Google** — crear credenciales OAuth en Google Cloud Console, pegar
+   `Client ID` y `Client Secret` en el provider Google de Supabase.
+2. **GitHub** — crear una OAuth App en GitHub (Settings → Developer settings →
+   OAuth Apps), pegar `Client ID` y `Client Secret` en el provider GitHub.
+3. **Redirect / Site URL** — en Authentication → URL Configuration:
+   - `Site URL`: la URL base del sitio (ej. `http://localhost:3000` en dev).
+   - Añadir a `Redirect URLs`: `<origin>/auth/callback` (cubre OAuth,
+     confirmación de email y el reset de contraseña que pasa por el callback).
+
+El callback de cada provider en su consola apunta al endpoint de Supabase
+`https://<project-ref>.supabase.co/auth/v1/callback` (lo muestra el propio
+dashboard al activar el provider). Email+contraseña funciona sin nada de esto.

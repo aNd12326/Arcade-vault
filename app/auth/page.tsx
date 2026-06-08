@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "../_lib/user-context";
@@ -10,8 +10,13 @@ type Tab = "in" | "up";
 
 export default function AuthPage() {
   const router = useRouter();
-  const { login } = useUser();
+  const { user, login } = useUser();
   const [supabase] = useState(createClient);
+
+  // Already signed in with a real account → no reason to see login/registro.
+  useEffect(() => {
+    if (user && !user.isGuest) router.replace("/");
+  }, [user, router]);
 
   const [tab, setTab] = useState<Tab>("in");
   const [nickname, setNickname] = useState("");

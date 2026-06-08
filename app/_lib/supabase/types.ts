@@ -14,6 +14,7 @@ export type Score = {
   game_id: string;
   nickname: string;
   score: number;
+  user_id: string | null;
   created_at: string;
 };
 

@@ -9,7 +9,7 @@ import {
 } from "react";
 import { createClient } from "./supabase/client";
 
-type User = { name: string; isGuest: boolean } | null;
+type User = { name: string; isGuest: boolean; avatar: string | null } | null;
 
 type SavedScore = {
   game: string;
@@ -21,7 +21,7 @@ type SavedScore = {
 type UserContextValue = {
   user: User;
   login: (name: string) => void;
-  signOut: () => void;
+  signOut: () => Promise<void>;
   saveScore: (game: string, score: number, name: string) => void;
   scores: SavedScore[];
 };
@@ -73,9 +73,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
           .eq("id", authUser.id)
           .single();
         if (!active) return;
+        const meta = authUser.user_metadata ?? {};
         setUser({
           name: profile?.nickname ?? authUser.email ?? "PLAYER",
           isGuest: false,
+          avatar: meta.avatar_url ?? meta.picture ?? null,
         });
       } else {
         setUser(readGuest());
@@ -103,17 +105,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   // Guest-only login: persists a local nickname with no Supabase session.
   const login = (name: string) => {
-    const u: User = { name, isGuest: true };
+    const u: User = { name, isGuest: true, avatar: null };
     setUser(u);
     localStorage.setItem("av_user", JSON.stringify(u));
   };
 
-  const signOut = () => {
+  const signOut = async () => {
     if (user && !user.isGuest) {
-      supabase.auth.signOut();
-    } else {
-      localStorage.removeItem("av_user");
+      await supabase.auth.signOut();
     }
+    // Always clear the guest fallback too, so no stale identity survives.
+    localStorage.removeItem("av_user");
     setUser(null);
   };
 

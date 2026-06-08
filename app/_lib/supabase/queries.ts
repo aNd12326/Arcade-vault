@@ -43,9 +43,15 @@ export async function insertScore(
   score: number
 ): Promise<void> {
   const supabase = await createClient();
+  // Stamp the score with the logged-in user's id when there is a session;
+  // guests insert with user_id = null. Source is the trusted server session,
+  // never the request body, so it can't be spoofed.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const { error } = await supabase
     .from("scores")
-    .insert({ game_id: gameId, nickname, score });
+    .insert({ game_id: gameId, nickname, score, user_id: user?.id ?? null });
   if (error) throw new Error(error.message);
 }
 
