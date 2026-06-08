@@ -290,6 +290,79 @@ a {
   display: none;
 }
 
+/* Account (logged-in user: avatar + name + sign out, inline) */
+.account-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: 16px;
+}
+.acct-id {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.acct-avatar {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(150deg, var(--bg-3), var(--bg-2));
+  border: 1px solid var(--line);
+  box-shadow:
+    0 0 0 1px rgba(0, 245, 255, 0.06),
+    0 0 14px rgba(0, 245, 255, 0.14);
+}
+.acct-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.acct-avatar span {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--cyan);
+  text-shadow: 0 0 8px rgba(0, 245, 255, 0.4);
+}
+.acct-id-name {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.signout-inline {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--magenta);
+  background: rgba(255, 0, 110, 0.06);
+  border: 1px solid rgba(255, 0, 110, 0.4);
+  box-shadow:
+    0 0 0 1px rgba(255, 0, 110, 0.08) inset,
+    0 0 14px rgba(255, 0, 110, 0.12);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease;
+}
+.signout-inline:hover {
+  color: #fff;
+  background: rgba(255, 0, 110, 0.18);
+  box-shadow: 0 0 16px rgba(255, 0, 110, 0.4);
+}
+
 @media (max-width: 840px) {
   .av-nav {
     padding: 12px 16px;
@@ -298,6 +371,9 @@ a {
     display: none;
   }
   .av-nav .coin-counter {
+    display: none;
+  }
+  .av-nav .account-wrap {
     display: none;
   }
   .av-nav .hamburger {
