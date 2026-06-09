@@ -52,8 +52,23 @@ export async function POST(request: Request) {
     },
   });
   if (error) {
+    // Map a uniqueness / already-registered failure (incl. the TOCTOU race the
+    // pre-check above can miss) to a fixed message + 409. Never forward the raw
+    // Postgres / Supabase error text to the client.
+    const msg = error.message.toLowerCase();
+    const isDuplicate =
+      msg.includes("already registered") ||
+      msg.includes("already exists") ||
+      msg.includes("duplicate") ||
+      msg.includes("unique");
+    if (isDuplicate) {
+      return NextResponse.json(
+        { ok: false, error: "Ese nickname ya está tomado." },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
-      { ok: false, error: error.message },
+      { ok: false, error: "No se pudo crear la cuenta." },
       { status: 400 }
     );
   }

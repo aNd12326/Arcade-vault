@@ -4,6 +4,7 @@ import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "../../_lib/supabase/client";
+import { isStrongPassword, PASSWORD_HINT } from "../../_lib/password";
 
 export default function ResetPage() {
   const router = useRouter();
@@ -52,6 +53,10 @@ export default function ResetPage() {
   const setNewPassword = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!isStrongPassword(pass)) {
+      setError(PASSWORD_HINT);
+      return;
+    }
     setBusy(true);
     try {
       const { error } = await supabase.auth.updateUser({ password: pass });
@@ -96,6 +101,18 @@ export default function ResetPage() {
                 onChange={(e) => setPass(e.target.value)}
                 placeholder="••••••••"
               />
+              <div
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  color: "var(--ink-faint)",
+                  letterSpacing: "0.04em",
+                  marginTop: 6,
+                  lineHeight: 1.5,
+                }}
+              >
+                {PASSWORD_HINT}
+              </div>
             </div>
             {error && (
               <div
